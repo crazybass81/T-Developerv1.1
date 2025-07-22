@@ -43,6 +43,64 @@ To get help for a specific command:
 tdev <command> --help
 ```
 
+### Generation Commands
+
+#### Generate Agent
+
+Generate a new agent using Agno:
+
+```bash
+tdev generate agent --name MyAgent --goal "Description of what the agent should do"
+```
+
+You can also provide a tool to use:
+
+```bash
+tdev generate agent --name MyAgent --goal "Description" --tool ToolName
+```
+
+Or use a specification file:
+
+```bash
+tdev generate agent --spec path/to/specification.json
+```
+
+#### Generate Tool
+
+Generate a new tool using Agno:
+
+```bash
+tdev generate tool --name MyTool --goal "Description of what the tool should do"
+```
+
+Or use a specification file:
+
+```bash
+tdev generate tool --spec path/to/specification.json
+```
+
+### Orchestration Commands
+
+#### Orchestrate
+
+Use the orchestrator to fulfill a goal:
+
+```bash
+tdev orchestrate "Goal description"
+```
+
+You can also provide a code file to classify:
+
+```bash
+tdev orchestrate "Goal description" --code path/to/code.py
+```
+
+And additional options as JSON:
+
+```bash
+tdev orchestrate "Goal description" --options '{"key": "value"}'
+```
+
 ### Initialization Commands
 
 #### Initialize Agent
@@ -192,6 +250,32 @@ tdev compose --name echo-flow --steps EchoAgent
 
 # Run the workflow
 tdev run echo-flow
+```
+
+### Using the Orchestrator
+
+```bash
+# Use the orchestrator to fulfill a goal
+tdev orchestrate "Echo the input data"
+
+# Orchestrate with a code file
+tdev orchestrate "Classify this code" --code path/to/code.py
+
+# Orchestrate with options
+tdev orchestrate "Process this data" --options '{"data": "example"}'
+```
+
+### Generating Components with Agno
+
+```bash
+# Generate a new agent
+tdev generate agent --name Summarizer --goal "Summarize text documents"
+
+# Generate a tool wrapper agent
+tdev generate agent --name TextProcessor --goal "Process text" --tool TextProcessingTool
+
+# Generate a new tool
+tdev generate tool --name TextFormatter --goal "Format text with proper spacing and capitalization"
 ```
 
 ### Creating and Running a Team

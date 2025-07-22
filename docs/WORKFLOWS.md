@@ -49,6 +49,22 @@ A workflow definition includes:
 
 ## Creating Workflows
 
+### Using the Orchestrator
+
+In Phase 3, you can use the orchestrator to automatically generate and execute workflows based on a goal:
+
+```bash
+tdev orchestrate "Summarize text and upload to S3"
+```
+
+This will:
+1. Invoke the MetaAgent to coordinate the process
+2. Use the PlannerAgent to generate a workflow plan
+3. Use the EvaluatorAgent to assess the plan's quality
+4. Use the WorkflowExecutorAgent to execute the workflow
+
+If any required agents are missing, the AutoAgentComposer (Agno) will generate them automatically.
+
 ### Using the CLI
 
 You can create a workflow using the CLI:

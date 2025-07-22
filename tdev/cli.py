@@ -6,6 +6,7 @@ from pathlib import Path
 
 from tdev.core import config
 from tdev.core.init_registry import initialize_registry
+from tdev.core.registry import get_registry
 
 @click.group()
 def main():
@@ -345,9 +346,174 @@ def run_team(team_name, input):
     return result
 
 @main.command()
+@click.argument('goal')
+@click.option('--code', help='Path to code file to classify')
+@click.option('--options', help='Options as JSON string')
+def orchestrate(goal, code, options):
+    """Orchestrate agents to fulfill a goal."""
+    click.echo(f"Orchestrating to fulfill goal: {goal}")
+    
+    # Get the registry
+    from tdev.core.registry import get_registry
+    registry = get_registry()
+    
+    # Get the OrchestratorTeam
+    team = registry.get_instance("OrchestratorTeam")
+    if not team:
+        click.echo("OrchestratorTeam not found")
+        return
+    
+    # Prepare input data
+    input_data = {"goal": goal}
+    
+    if code:
+        input_data["code"] = code
+    
+    if options:
+        try:
+            input_data["options"] = json.loads(options)
+        except json.JSONDecodeError:
+            click.echo("Invalid JSON in options")
+            return
+    
+    # Run the team
+    click.echo("Starting orchestration...")
+    result = team.run(input_data)
+    
+    # Display the result
+    click.echo("Orchestration completed.")
+    click.echo(f"Result: {result}")
+    
+    return result
+
+@main.command()
+@click.argument('goal')
+@click.option('--code', help='Path to code file to classify')
+@click.option('--options', help='Options as JSON string')
+def orchestrate(goal, code, options):
+    """Orchestrate agents to fulfill a goal."""
+    click.echo(f"Orchestrating to fulfill goal: {goal}")
+    
+    # Get the registry
+    from tdev.core.registry import get_registry
+    registry = get_registry()
+    
+    # Get the OrchestratorTeam
+    team = registry.get_instance("OrchestratorTeam")
+    if not team:
+        click.echo("OrchestratorTeam not found")
+        return
+    
+    # Prepare input data
+    input_data = {"goal": goal}
+    
+    if code:
+        input_data["code"] = code
+    
+    if options:
+        try:
+            input_data["options"] = json.loads(options)
+        except json.JSONDecodeError:
+            click.echo("Invalid JSON in options")
+            return
+    
+    # Run the team
+    click.echo("Starting orchestration...")
+    result = team.run(input_data)
+    
+    # Display the result
+    click.echo("Orchestration completed.")
+    click.echo(f"Result: {result}")
+    
+    return result
+
+@main.command()
 def init_registry():
     """Initialize the registry with core components."""
     initialize_registry()
+
+@main.group()
+def generate():
+    """Generate new components using Agno."""
+    pass
+
+@generate.command()
+@click.option('--name', required=True, help='Name of the agent')
+@click.option('--goal', required=True, help='Description of what the agent should do')
+@click.option('--tool', help='Tool to use (for tool wrapper agents)')
+@click.option('--spec', type=click.Path(exists=True), help='Path to a JSON specification file')
+def agent(name, goal, tool, spec):
+    """Generate a new agent using Agno."""
+    click.echo(f"Generating agent: {name}")
+    
+    # Get the registry
+    registry = get_registry()
+    
+    # Get the AutoAgentComposer
+    composer = registry.get_instance("AutoAgentComposerAgent")
+    if not composer:
+        click.echo("AutoAgentComposerAgent not found in registry")
+        return
+    
+    # Prepare the specification
+    if spec:
+        with open(spec, 'r') as f:
+            specification = json.load(f)
+    else:
+        specification = {
+            "type": "agent",
+            "name": name,
+            "goal": goal
+        }
+        if tool:
+            specification["tools"] = [tool]
+            specification["template"] = "tool_wrapper"
+    
+    # Run the composer
+    result = composer.run(specification)
+    
+    # Display the result
+    if result.get("success"):
+        click.echo(f"Generated agent at {result.get('path')}")
+    else:
+        click.echo(f"Failed to generate agent: {result.get('error')}")
+
+@generate.command()
+@click.option('--name', required=True, help='Name of the tool')
+@click.option('--goal', required=True, help='Description of what the tool should do')
+@click.option('--spec', type=click.Path(exists=True), help='Path to a JSON specification file')
+def tool(name, goal, spec):
+    """Generate a new tool using Agno."""
+    click.echo(f"Generating tool: {name}")
+    
+    # Get the registry
+    registry = get_registry()
+    
+    # Get the AutoAgentComposer
+    composer = registry.get_instance("AutoAgentComposerAgent")
+    if not composer:
+        click.echo("AutoAgentComposerAgent not found in registry")
+        return
+    
+    # Prepare the specification
+    if spec:
+        with open(spec, 'r') as f:
+            specification = json.load(f)
+    else:
+        specification = {
+            "type": "tool",
+            "name": name,
+            "goal": goal
+        }
+    
+    # Run the composer
+    result = composer.run(specification)
+    
+    # Display the result
+    if result.get("success"):
+        click.echo(f"Generated tool at {result.get('path')}")
+    else:
+        click.echo(f"Failed to generate tool: {result.get('error')}")
 
 if __name__ == '__main__':
     main()

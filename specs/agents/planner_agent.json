@@ -1,0 +1,7 @@
+{
+  "type": "agent",
+  "name": "Planner",
+  "goal": "Plan a workflow by selecting and ordering appropriate agents for a given goal",
+  "input": "A goal description and optional context information",
+  "output": "A workflow definition with steps, agent references, and data flow mappings"
+}

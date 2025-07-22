@@ -233,14 +233,20 @@ tdev register tdev/teams/double_echo_team.py
 tdev run-team DoubleEchoTeam --input '{"message": "Hello, Team!"}'
 ```
 
-## Case Study: OrchestratorTeam
+## Case Study: OrchestratorTeam and AutoDevTeam
 
-The `OrchestratorTeam` is a core component of T-Developer that demonstrates how Teams can encapsulate complex workflows. It coordinates the main orchestration pipeline:
+The `OrchestratorTeam` is a core component of T-Developer that demonstrates how Teams can encapsulate complex workflows. In Phase 3, it has been enhanced to use the MetaAgent as the central coordinator.
 
-1. **ClassifierAgent**: Analyzes code to determine its type
-2. **PlannerAgent**: Designs a workflow based on the goal and classification
-3. **EvaluatorAgent**: Assesses the quality of the proposed workflow
-4. **WorkflowExecutorAgent**: Executes the approved workflow
+### Phase 3 Architecture: AutoDevTeam
+
+The AutoDevTeam is the Phase 3 implementation of the OrchestratorTeam, which uses the MetaAgent to coordinate the following core agents:
+
+1. **MetaAgent**: The central orchestrator that coordinates the flow
+2. **ClassifierAgent**: Analyzes code to determine its type
+3. **PlannerAgent**: Designs a workflow based on the goal and classification
+4. **EvaluatorAgent**: Assesses the quality of the proposed workflow
+5. **WorkflowExecutorAgent**: Executes the approved workflow
+6. **AutoAgentComposer**: Generates new agents when needed
 
 By packaging these agents into a Team, the orchestration logic becomes a single, reusable component that can be invoked with a simple call:
 
@@ -248,7 +254,13 @@ By packaging these agents into a Team, the orchestration logic becomes a single,
 tdev run-team OrchestratorTeam --input '{"goal": "Build a document summarizer", "code": "path/to/code.py"}'
 ```
 
-This demonstrates how Teams can abstract complex multi-agent processes into higher-level components.
+In Phase 3, you can also use the dedicated orchestrate command:
+
+```bash
+tdev orchestrate "Build a document summarizer" --code path/to/code.py
+```
+
+This demonstrates how Teams can abstract complex multi-agent processes into higher-level components. The MetaAgent within the OrchestratorTeam ensures that all agents work together seamlessly, and can even trigger the AutoAgentComposer to generate new agents when needed.
 
 ## Related Documentation
 

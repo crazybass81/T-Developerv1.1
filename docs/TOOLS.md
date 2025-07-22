@@ -1,5 +1,9 @@
 # Tool Development Guide
 
+## Overview
+
+Tools in T-Developer are pure functions with no decision logic (0 brains) that perform specific tasks. As of Phase 3, tools can be created manually or generated automatically using the Agno system (AutoAgentComposer).
+
 This guide explains how to create and register tools in the T-Developer system.
 
 ## What is a Tool vs an Agent
@@ -17,7 +21,35 @@ Key differences between Tools and Agents:
 
 ## Steps to Create a Tool
 
-### 1. Create a New Tool File
+### Option 1: Generate a Tool using Agno
+
+The easiest way to create a new tool is to use the Agno system (AutoAgentComposer):
+
+```bash
+tdev generate tool --name MyTool --goal "Description of what the tool should do"
+```
+
+You can also provide a more detailed specification in a JSON file:
+
+```bash
+tdev generate tool --spec path/to/specification.json
+```
+
+The specification file should have this format:
+
+```json
+{
+  "type": "tool",
+  "name": "MyTool",
+  "goal": "Description of what the tool should do",
+  "input": "Description of the input data",
+  "output": "Description of the output data"
+}
+```
+
+### Option 2: Create a Tool Manually
+
+#### 1. Create a New Tool File
 
 You can use the CLI to create a new tool:
 

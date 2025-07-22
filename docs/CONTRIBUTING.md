@@ -41,8 +41,22 @@ T-Developerv1.1/
 │   │   ├── workflow.py     # Workflow definition and utilities
 │   │   └── config.py       # Configuration utilities
 │   ├── agents/             # Agent implementations
+│   │   ├── auto_agent_composer.py  # Agno implementation
+│   │   ├── meta_agent.py   # MetaAgent (Orchestrator) implementation
+│   │   ├── classifier_agent.py  # ClassifierAgent implementation
+│   │   ├── planner_agent.py  # PlannerAgent implementation
+│   │   ├── evaluator_agent.py  # EvaluatorAgent implementation
+│   │   └── workflow_executor_agent.py  # WorkflowExecutorAgent implementation
 │   ├── tools/              # Tool implementations
+│   ├── teams/              # Team implementations
+│   │   └── orchestrator_team.py  # OrchestratorTeam implementation
 │   └── workflows/          # Workflow utilities
+├── specs/                  # Component specifications
+│   ├── agents/             # Agent specifications
+│   └── tools/              # Tool specifications
+├── scripts/                # Utility scripts
+│   ├── generate_components.py  # Script to generate components from specs
+│   └── test_orchestration.py  # Script to test the orchestration system
 ├── tests/                  # Test suite
 ├── docs/                   # Documentation
 ├── .github/                # GitHub workflows
@@ -67,7 +81,26 @@ T-Developerv1.1/
 
 ## Adding New Components
 
-### Adding a New Agent
+### Generating Components with Agno
+
+The recommended way to add new components is to use Agno (AutoAgentComposer):
+
+1. Generate a new agent:
+   ```bash
+   tdev generate agent --name MyAgent --goal "Description of what the agent should do"
+   ```
+
+2. Generate a new tool:
+   ```bash
+   tdev generate tool --name MyTool --goal "Description of what the tool should do"
+   ```
+
+3. Use a specification file for more control:
+   ```bash
+   tdev generate agent --spec path/to/specification.json
+   ```
+
+### Adding a New Agent Manually
 
 1. Create a new agent file:
    ```bash

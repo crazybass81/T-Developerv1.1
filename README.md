@@ -2,6 +2,8 @@
 
 T-Developer is an agent orchestration system designed to build SaaS applications by composing Tools, Agents, and Teams. This repository contains the implementation of the T-Developer platform based on the architectural specifications.
 
+**Current Phase: Phase 3 (Team Composition and Orchestration)**
+
 ## Core Components
 
 - **Tools**: Pure functional units without decision logic (0 brains)
@@ -14,6 +16,8 @@ T-Developer is an agent orchestration system designed to build SaaS applications
 - **Workflow System**: Define and execute sequences of agent and team steps
 - **CLI Interface**: Command-line tools for creating and managing components
 - **Testing Framework**: Test agents, tools, and teams with sample inputs
+- **Agno (AutoAgentComposer)**: Automatically generate new agents and tools based on specifications
+- **MetaAgent (Orchestrator)**: Coordinate specialized agents to fulfill complex tasks
 
 ## Getting Started
 
@@ -39,6 +43,12 @@ tdev compose --name echo-flow --steps EchoAgent
 
 # Run the workflow
 tdev run echo-flow
+
+# Use the orchestrator to fulfill a goal
+tdev orchestrate "Echo the input data"
+
+# Generate a new agent using Agno
+tdev generate agent --name CustomAgent --goal "A custom agent that does something specific"
 ```
 
 ## Documentation
@@ -51,6 +61,8 @@ Comprehensive documentation is available in the `docs/` directory:
 - [Team Development Guide](docs/TEAMS.md) - How to create and register teams
 - [Workflow Guide](docs/WORKFLOWS.md) - How to define and use workflows
 - [CLI Usage Guide](docs/CLI_USAGE.md) - Command-line interface reference
+- [AutoDevTeam Assembly](docs/AUTO_DEV_TEAM.md) - How core agents work together in Phase 3
+- [Phase Transition](docs/PHASE_TRANSITION.md) - Summary of the transition from Phase 2 to Phase 3
 
 ## Architecture
 

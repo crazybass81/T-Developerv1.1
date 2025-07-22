@@ -5,8 +5,8 @@ class OrchestratorTeam(Team):
     """
     OrchestratorTeam coordinates the core agents of T-Developer.
     
-    This team encapsulates the main orchestration workflow by sequentially
-    invoking the ClassifierAgent, PlannerAgent, EvaluatorAgent, and
+    This team encapsulates the main orchestration workflow by using the MetaAgent
+    to coordinate ClassifierAgent, PlannerAgent, EvaluatorAgent, and
     WorkflowExecutorAgent to fulfill a user request.
     """
     
@@ -17,15 +17,54 @@ class OrchestratorTeam(Team):
         # Get the registry
         registry = get_registry()
         
-        # Add member agents
+        # Add the MetaAgent as the main orchestrator
+        self.add_agent("meta", registry.get_instance("MetaAgent"))
+        
+        # Add other core agents for direct access if needed
         self.add_agent("classifier", registry.get_instance("ClassifierAgent"))
         self.add_agent("planner", registry.get_instance("PlannerAgent"))
         self.add_agent("evaluator", registry.get_instance("EvaluatorAgent"))
         self.add_agent("executor", registry.get_instance("WorkflowExecutorAgent"))
+        self.add_agent("composer", registry.get_instance("AutoAgentComposerAgent"))
     
     def run(self, input_data):
         """
-        Coordinate the orchestration workflow.
+        Coordinate the orchestration workflow using the MetaAgent.
+        
+        Args:
+            input_data: A dictionary containing either:
+                - 'code': A path to code that needs classification
+                - 'goal': A description of the goal to achieve
+                - 'options': Optional configuration options
+                
+        Returns:
+            The result of the workflow execution
+        """
+        print("OrchestratorTeam: Starting orchestration workflow using MetaAgent")
+        
+        # Get the MetaAgent
+        meta_agent = self.agents.get("meta")
+        if not meta_agent:
+            print("OrchestratorTeam: MetaAgent not found, falling back to direct orchestration")
+            return self._legacy_run(input_data)
+        
+        # Prepare the request for the MetaAgent
+        request = {
+            "goal": input_data.get("goal", ""),
+            "code": input_data.get("code"),
+            "options": input_data.get("options", {})
+        }
+        
+        # Run the MetaAgent
+        print("OrchestratorTeam: Delegating to MetaAgent")
+        result = meta_agent.run(request)
+        
+        print("OrchestratorTeam: MetaAgent execution completed")
+        return result
+    
+    def _legacy_run(self, input_data):
+        """
+        Legacy direct orchestration method (fallback if MetaAgent is not available).
         
         Args:
             input_data: A dictionary containing either:
@@ -35,7 +74,7 @@ class OrchestratorTeam(Team):
         Returns:
             The result of the workflow execution
         """
-        print("OrchestratorTeam: Starting orchestration workflow")
+        print("OrchestratorTeam: Using legacy direct orchestration")
         
         # Initialize context
         context = {}

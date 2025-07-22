@@ -1,0 +1,7 @@
+{
+  "type": "agent",
+  "name": "WorkflowExecutor",
+  "goal": "Execute a workflow by running each step in sequence and managing data flow between steps",
+  "input": "A workflow definition with steps and data mappings",
+  "output": "Execution results including the final output and execution trace"
+}

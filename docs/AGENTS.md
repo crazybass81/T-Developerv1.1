@@ -1,5 +1,9 @@
 # Agent Development Guide
 
+## Overview
+
+Agents in T-Developer are components with a single decision-making point (1 brain) that perform specific roles. As of Phase 3, agents can be created manually or generated automatically using the Agno system (AutoAgentComposer).
+
 This guide explains how to create and register agents in the T-Developer system.
 
 ## Agent Roles in T-Developer
@@ -26,7 +30,35 @@ Core agent types in the system include:
 
 ## Steps to Implement a New Agent
 
-### 1. Create a New Agent File
+### Option 1: Generate an Agent using Agno
+
+The easiest way to create a new agent is to use the Agno system (AutoAgentComposer):
+
+```bash
+tdev generate agent --name MyAgent --goal "Description of what the agent should do"
+```
+
+You can also provide a more detailed specification in a JSON file:
+
+```bash
+tdev generate agent --spec path/to/specification.json
+```
+
+The specification file should have this format:
+
+```json
+{
+  "type": "agent",
+  "name": "MyAgent",
+  "goal": "Description of what the agent should do",
+  "input": "Description of the input data",
+  "output": "Description of the output data"
+}
+```
+
+### Option 2: Create an Agent Manually
+
+#### 1. Create a New Agent File
 
 You can use the CLI to create a new agent:
 
