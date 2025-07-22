@@ -4,7 +4,7 @@ This guide explains how to define and use workflows in the T-Developer system.
 
 ## What is a Workflow?
 
-In T-Developer, a **Workflow** is a sequence of steps, each referencing an agent to execute. Workflows define how data flows between steps and how agents are combined to accomplish a task.
+In T-Developer, a **Workflow** is a sequence of steps, each referencing an agent or team to execute. Workflows define how data flows between steps and how components are combined to accomplish a task.
 
 Workflows are stored as JSON or YAML files in the `.tdev/workflows/` directory.
 
@@ -58,6 +58,14 @@ tdev compose --name summarize-upload --steps SummarizerAgent,S3UploaderAgent
 ```
 
 This will create a basic workflow definition in `.tdev/workflows/summarize-upload.json`.
+
+You can also include teams in your workflow:
+
+```bash
+tdev compose --name process-data --steps DataFetcherAgent,ProcessingTeam,StorageAgent
+```
+
+Teams are treated as single steps in the workflow, with their internal coordination logic hidden from the workflow definition.
 
 ### Manual Creation
 
@@ -205,3 +213,30 @@ Here's a complete example of a simple workflow:
 ```
 
 This workflow simply passes the input message to the EchoAgent and returns its output.
+
+## Example: Using a Team in a Workflow
+
+Here's an example of a workflow that includes a team:
+
+```json
+{
+  "id": "double-echo-flow-v1",
+  "description": "A workflow that uses the DoubleEchoTeam",
+  "inputs": {
+    "message": "string"
+  },
+  "steps": [
+    {
+      "id": "double-echo",
+      "agent": "DoubleEchoTeam",
+      "input_from": "message",
+      "output_to": "result"
+    }
+  ],
+  "outputs": {
+    "result": "result"
+  }
+}
+```
+
+In this workflow, the DoubleEchoTeam is treated as a single step, even though internally it coordinates two EchoAgent instances. This encapsulation allows complex logic to be hidden behind a simple interface in the workflow.

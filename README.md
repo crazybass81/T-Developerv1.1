@@ -10,10 +10,10 @@ T-Developer is an agent orchestration system designed to build SaaS applications
 
 ## Features
 
-- **Component Registry**: Central directory of all available agents and tools
-- **Workflow System**: Define and execute sequences of agent steps
+- **Component Registry**: Central directory of all available agents, tools, and teams
+- **Workflow System**: Define and execute sequences of agent and team steps
 - **CLI Interface**: Command-line tools for creating and managing components
-- **Testing Framework**: Test agents and tools with sample inputs
+- **Testing Framework**: Test agents, tools, and teams with sample inputs
 
 ## Getting Started
 
@@ -48,6 +48,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - [Architecture](docs/ARCHITECTURE.md) - System architecture and component interactions
 - [Agent Development Guide](docs/AGENTS.md) - How to create and register agents
 - [Tool Development Guide](docs/TOOLS.md) - How to create and register tools
+- [Team Development Guide](docs/TEAMS.md) - How to create and register teams
 - [Workflow Guide](docs/WORKFLOWS.md) - How to define and use workflows
 - [CLI Usage Guide](docs/CLI_USAGE.md) - Command-line interface reference
 
@@ -98,6 +99,22 @@ tdev register tdev/tools/my_tool.py
 
 # Test the tool
 tdev test MyTool
+```
+
+### Creating a New Team
+
+```bash
+# Create a new team
+tdev init team --name MyTeam
+
+# Edit the team file
+vim tdev/teams/my_team.py
+
+# Register the team
+tdev register tdev/teams/my_team.py
+
+# Run the team
+tdev run-team MyTeam --input '{"message": "Hello, Team!"}'
 ```
 
 ## Testing

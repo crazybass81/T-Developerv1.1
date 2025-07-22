@@ -16,7 +16,7 @@ This document serves as an index to the complete T‑Developer v1.1 system desig
 
 5. [**Tool Specification Format**](Tool_Specification.md) - Definition and specification of Tools in T‑Developer
 
-6. [**Service Composition Mechanisms**](Service_Composition.md) - How T‑Developer composes services from available agents and tools
+6. [**Service Composition Mechanisms**](Service_Composition.md) - How T‑Developer composes services from available agents, tools, and teams
 
 7. [**Architecture Diagrams**](Architecture_Diagrams.md) - Visual aids illustrating dynamic behavior and data flows
 
@@ -28,7 +28,7 @@ This document serves as an index to the complete T‑Developer v1.1 system desig
 
 ## Component Specifications
 
-### Agents
+### Agents & Teams
 
 - [Agent Registry Specification](T-developer-agent-registry-spec.md)
 - [Agent Reusability Tiers](T-developer-agent-reusability-tiers.md)
@@ -44,6 +44,7 @@ This document serves as an index to the complete T‑Developer v1.1 system desig
 - [MetaAgent Specification](T-developer-metaagent-spec.md)
 - [Planner Agent Specification](T-developer-planner-agent-spec.md)
 - [Team Specification](T-developer-team-spec.md)
+- [Team Executor Agent Specification](T-developer-team-executor-agent-spec.md)
 - [Test Runner Agent](T-developer-test-runner-agent.md)
 
 ### Workflows & Execution

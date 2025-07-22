@@ -91,11 +91,11 @@ The `WorkflowEvaluatorAgent` scores workflows based on five key dimensions:
 
 1. **Structural Completeness (30%)**: Ensures all necessary steps are present and properly connected. A workflow is incomplete if required steps are missing or if data cannot flow properly between steps.
 
-2. **Agent Suitability (25%)**: Evaluates whether the selected agents are appropriate for their assigned tasks. For example, using a `SummarizerAgent` for translation would be unsuitable.
+2. **Agent Suitability (25%)**: Evaluates whether the selected agents or teams are appropriate for their assigned tasks. For example, using a `SummarizerAgent` for translation would be unsuitable, or using a simple agent where a team is needed for complex coordination.
 
 3. **Error Resilience (20%)**: Assesses how well the workflow handles potential failures. Good workflows include validation steps, retry mechanisms, or fallback options.
 
-4. **Efficiency (15%)**: Measures how efficiently the workflow accomplishes its goal. Unnecessary steps or overly complex agent combinations reduce this score.
+4. **Efficiency (15%)**: Measures how efficiently the workflow accomplishes its goal. Unnecessary steps or overly complex agent combinations reduce this score. Using teams appropriately can improve efficiency by encapsulating complex logic.
 
 5. **Clarity (10%)**: Evaluates how understandable and maintainable the workflow is. Clear step names and logical flow improve this score.
 

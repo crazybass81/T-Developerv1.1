@@ -107,6 +107,28 @@ See [Agent Development Guide](AGENTS.md) for more details.
 
 See [Tool Development Guide](TOOLS.md) for more details.
 
+### Adding a New Team
+
+1. Create a new team file:
+   ```bash
+   tdev init team --name MyTeam
+   ```
+
+2. Implement the team logic in `tdev/teams/my_team.py`:
+   - Add member agents in the constructor
+   - Implement the coordination logic in the `run` method
+
+3. Register the team:
+   ```bash
+   tdev register tdev/teams/my_team.py
+   ```
+
+4. Add tests in `tests/`
+
+5. Update documentation if necessary
+
+See [Team Development Guide](TEAMS.md) for more details.
+
 ## Testing
 
 ### Running Tests

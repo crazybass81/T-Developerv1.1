@@ -17,11 +17,11 @@ T-Developer is designed as a meta-agent system where specialized agents work tog
 The heart of T-Developer is the meta-agent orchestration pattern, where specialized agents work together in a coordinated sequence:
 
 1. **ClassifierAgent** analyzes code to determine its type (Tool/Agent/Team)
-2. **PlannerAgent** breaks down goals into steps and selects appropriate agents
+2. **PlannerAgent** breaks down goals into steps and selects appropriate agents or teams
 3. **EvaluatorAgent** scores workflows for quality and efficiency
 4. **WorkflowExecutorAgent** runs the composed workflows step by step
 
-This orchestration allows T-Developer to dynamically assemble solutions from reusable components.
+This orchestration can be encapsulated in the **OrchestratorTeam**, which coordinates these core agents to fulfill a user request. The orchestration allows T-Developer to dynamically assemble solutions from reusable components.
 
 ## System Architecture
 
@@ -75,7 +75,13 @@ Workflows define sequences of steps, each referencing an agent to execute. The W
 - **PlannerAgent**: Plans workflows by selecting and ordering agents
 - **EvaluatorAgent**: Evaluates workflows for quality and efficiency
 - **WorkflowExecutorAgent**: Executes workflows step by step
+- **TeamExecutorAgent**: Executes teams and their member agents
 - **AgentTesterAgent**: Tests agents with sample inputs
+
+#### 5. Core Teams
+
+- **OrchestratorTeam**: Coordinates the core agents (Classifier, Planner, Evaluator, Executor)
+- **DoubleEchoTeam**: A simple example team that calls EchoAgent twice in sequence
 
 ## Data Flow
 
@@ -111,6 +117,7 @@ tdev/                   # Python package
   ├── core/             # Core framework
   ├── agents/           # Agent implementations
   ├── tools/            # Tool implementations
+  ├── teams/            # Team implementations
   └── workflows/        # Workflow utilities
 ```
 
@@ -120,7 +127,8 @@ T-Developer is designed to be easily extended with new components:
 
 1. **Adding Agents**: Create a new Python class inheriting from `Agent` and implement the `run` method
 2. **Adding Tools**: Create a function with the `@tool` decorator or a class inheriting from `Tool`
-3. **Registering Components**: Use the CLI to register new components in the registry
+3. **Adding Teams**: Create a new Python class inheriting from `Team`, add member agents, and implement the coordination logic
+4. **Registering Components**: Use the CLI to register new components in the registry
 
 This extensibility allows T-Developer to grow its capabilities over time.
 

@@ -1,16 +1,16 @@
 # T‑Developer Service Composition Mechanisms
 
-This document explains how T‑Developer composes services (workflows) from available agents and tools. It covers how a user's request or goal is translated into a runnable SaaS service via the planning, orchestration, and workflow execution process.
+This document explains how T‑Developer composes services (workflows) from available agents, tools, and teams. It covers how a user's request or goal is translated into a runnable SaaS service via the planning, orchestration, and workflow execution process.
 
 ---
 
 ## 1. Overview of Composition
 
-In T‑Developer, **service composition** refers to the process of building a **workflow** (a series of agent/tool steps) that, when executed, fulfills a user's SaaS request. This composition process is automated through the PlannerAgent and related components.
+In T‑Developer, **service composition** refers to the process of building a **workflow** (a series of steps using agents, tools, or teams) that, when executed, fulfills a user's SaaS request. This composition process is automated through the PlannerAgent and related components.
 
 The key aspects of service composition include:
 - Breaking down a high-level goal into discrete steps
-- Selecting appropriate agents/tools for each step
+- Selecting appropriate agents, tools, or teams for each step
 - Defining the data flow between steps
 - Creating an executable workflow definition
 
@@ -66,13 +66,14 @@ This decomposition can be done through:
 - Pattern matching with known workflows
 - LLM assistance for complex goals
 
-### 2.4 Agent Selection
+### 2.4 Component Selection
 
-For each step, the PlannerAgent selects the most appropriate agent or tool from the candidates based on:
+For each step, the PlannerAgent selects the most appropriate agent, tool, or team from the candidates based on:
 - Compatibility with the step's requirements
-- Agent score (quality, stability, reusability)
+- Component score (quality, stability, reusability)
 - Resource efficiency
 - Version compatibility
+- Complexity of the task (teams for complex tasks, agents for simpler ones)
 
 ### 2.5 Workflow Definition Generation
 
@@ -128,12 +129,12 @@ The structure of input values received from the user:
 ```
 
 ### 3.4 Steps (단계)
-An array of execution steps, each mapping an agent to part of the data flow:
+An array of execution steps, each mapping a component to part of the data flow:
 ```json
 "steps": [
   {
     "id": "step_name",
-    "agent": "AgentName",
+    "agent": "ComponentName",
     "input_from": "source_key",
     "output_to": "destination_key"
   }
@@ -142,7 +143,7 @@ An array of execution steps, each mapping an agent to part of the data flow:
 
 Each step includes:
 - `id`: A unique identifier for the step
-- `agent`: The name of the agent or tool to execute
+- `agent`: The name of the agent, tool, or team to execute
 - `input_from`: Where to get input data (from workflow inputs or previous step outputs)
 - `output_to`: Where to store the step's output in the context
 
@@ -211,7 +212,9 @@ The workflow definition is typically stored in a repository or database for:
 - Audit and analysis
 - Sharing across environments
 
-## 7. Example Scenario
+## 7. Example Scenarios
+
+### 7.1 Basic Agent Workflow
 
 Let's walk through a complete service composition example:
 
@@ -273,6 +276,60 @@ Build a policy recommendation system for young entrepreneurs.
 
 6. The result is a policy recommendation tailored to young entrepreneurs.
 
+### 7.2 Workflow with Teams
+
+Here's an example that incorporates a team for more complex processing:
+
+```
+Build a document processing system with advanced analysis.
+```
+
+1. The PlannerAgent analyzes the request and identifies the need for document processing and advanced analysis.
+
+2. It queries the AgentRegistry and finds:
+   - `DocumentFetcherAgent`: Can retrieve documents
+   - `AnalysisTeam`: A team that coordinates multiple analysis agents
+   - `ReportGeneratorAgent`: Creates final reports
+
+3. The PlannerAgent creates a workflow definition:
+
+```json
+{
+  "id": "document-analysis-flow-v1",
+  "description": "Document processing system with advanced analysis",
+  "inputs": {
+    "document_url": "string"
+  },
+  "steps": [
+    {
+      "id": "fetch",
+      "agent": "DocumentFetcherAgent",
+      "input_from": "document_url",
+      "output_to": "raw_document"
+    },
+    {
+      "id": "analyze",
+      "agent": "AnalysisTeam",
+      "input_from": "raw_document",
+      "output_to": "analysis_results"
+    },
+    {
+      "id": "report",
+      "agent": "ReportGeneratorAgent",
+      "input_from": "analysis_results",
+      "output_to": "final_report"
+    }
+  ],
+  "outputs": {
+    "result": "final_report"
+  }
+}
+```
+
+4. The workflow treats the `AnalysisTeam` as a single step, even though internally it coordinates multiple specialized analysis agents (e.g., TextAnalysisAgent, EntityExtractionAgent, SentimentAnalysisAgent).
+
+5. This encapsulation simplifies the workflow while allowing complex coordination within the team.
+
 ### 예제 시나리오 (Korean)
 
 사용자가 "청년 창업가를 위한 정책 추천 시스템 구축"을 요청합니다. PlannerAgent는 요청을 분석하여 정책 문서 스크래핑, 유사 정책 클러스터링, 채팅 기반 추천 생성이라는 세 가지 주요 작업을 식별합니다. AgentRegistry에서 ScraperAgent, ClusterAgent, ChatAgent를 찾아 워크플로우 정의를 생성합니다. EvaluatorAgent가 워크플로우를 검토하여 완전하고 효율적인지 확인한 후, WorkflowExecutorAgent가 사용자의 쿼리로 워크플로우를 실행합니다. 결과적으로 청년 창업가에게 맞춤화된 정책 추천이 제공됩니다.
@@ -301,8 +358,10 @@ T‑Developer incorporates quality evaluation into the composition process, ensu
 
 ## 서비스 구성 메커니즘 요약 (Korean Summary)
 
-T‑Developer의 서비스 구성은 사용자의 요청이나 목표를 실행 가능한 SaaS 서비스로 변환하는 과정입니다. PlannerAgent는 목표를 분석하고, AgentRegistry에서 적절한 구성 요소를 찾고, 작업을 단계로 분해하고, 각 단계에 가장 적합한 에이전트를 선택하여 워크플로우 정의를 생성합니다.
+T‑Developer의 서비스 구성은 사용자의 요청이나 목표를 실행 가능한 SaaS 서비스로 변환하는 과정입니다. PlannerAgent는 목표를 분석하고, AgentRegistry에서 적절한 구성 요소를 찾고, 작업을 단계로 분해하고, 각 단계에 가장 적합한 에이전트, 도구 또는 팀을 선택하여 워크플로우 정의를 생성합니다.
 
-워크플로우 정의는 ID, 설명, 입력, 단계, 출력을 포함하는 JSON 형식으로 생성됩니다. 각 단계는 에이전트와 데이터 매핑을 지정합니다. 서비스 구성 프로세스는 사용자 요청, 분류, 계획, 평가, 선택, 정제(선택 사항), 저장, 실행의 순서로 진행됩니다.
+워크플로우 정의는 ID, 설명, 입력, 단계, 출력을 포함하는 JSON 형식으로 생성됩니다. 각 단계는 에이전트, 도구 또는 팀과 데이터 매핑을 지정합니다. 서비스 구성 프로세스는 사용자 요청, 분류, 계획, 평가, 선택, 정제(선택 사항), 저장, 실행의 순서로 진행됩니다.
+
+복잡한 작업을 위해서는 팀을 사용하여 여러 에이전트의 작업을 조정하고 워크플로우를 단순화할 수 있습니다. 팀은 단일 단계로 처리되지만 내부적으로는 여러 에이전트를 조정합니다.
 
 PlannerAgent가 필요한 단계에 적합한 에이전트를 찾을 수 없는 경우, 에이전트 생성 시스템(agno)과 통합하여 새 에이전트를 생성할 수 있습니다. 이 동적 에이전트 생성 기능은 T‑Developer의 서비스 구성을 매우 확장 가능하게 만들어 수동 개입 없이 새로운 요구 사항을 해결할 수 있습니다.
