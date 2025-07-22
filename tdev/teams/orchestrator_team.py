@@ -17,8 +17,8 @@ class OrchestratorTeam(Team):
         # Get the registry
         registry = get_registry()
         
-        # Add the MetaAgent as the main orchestrator
-        self.add_agent("meta", registry.get_instance("MetaAgent"))
+        # Add the DevCoordinatorAgent as the main orchestrator
+        self.add_agent("coordinator", registry.get_instance("DevCoordinatorAgent"))
         
         # Add other core agents for direct access if needed
         self.add_agent("classifier", registry.get_instance("ClassifierAgent"))
@@ -29,7 +29,7 @@ class OrchestratorTeam(Team):
     
     def run(self, input_data):
         """
-        Coordinate the orchestration workflow using the MetaAgent.
+        Coordinate the orchestration workflow using the DevCoordinatorAgent.
         
         Args:
             input_data: A dictionary containing either:
@@ -40,26 +40,26 @@ class OrchestratorTeam(Team):
         Returns:
             The result of the workflow execution
         """
-        print("OrchestratorTeam: Starting orchestration workflow using MetaAgent")
+        print("OrchestratorTeam: Starting orchestration workflow using DevCoordinatorAgent")
         
-        # Get the MetaAgent
-        meta_agent = self.agents.get("meta")
-        if not meta_agent:
-            print("OrchestratorTeam: MetaAgent not found, falling back to direct orchestration")
+        # Get the DevCoordinatorAgent
+        coordinator = self.agents.get("coordinator")
+        if not coordinator:
+            print("OrchestratorTeam: DevCoordinatorAgent not found, falling back to direct orchestration")
             return self._legacy_run(input_data)
         
-        # Prepare the request for the MetaAgent
+        # Prepare the request for the DevCoordinatorAgent
         request = {
             "goal": input_data.get("goal", ""),
             "code": input_data.get("code"),
             "options": input_data.get("options", {})
         }
         
-        # Run the MetaAgent
-        print("OrchestratorTeam: Delegating to MetaAgent")
-        result = meta_agent.run(request)
+        # Run the DevCoordinatorAgent
+        print("OrchestratorTeam: Delegating to DevCoordinatorAgent")
+        result = coordinator.run(request)
         
-        print("OrchestratorTeam: MetaAgent execution completed")
+        print("OrchestratorTeam: DevCoordinatorAgent execution completed")
         return result
     
     def _legacy_run(self, input_data):

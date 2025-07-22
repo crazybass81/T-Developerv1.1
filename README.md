@@ -17,7 +17,7 @@ T-Developer is an agent orchestration system designed to build SaaS applications
 - **CLI Interface**: Command-line tools for creating and managing components
 - **Testing Framework**: Test agents, tools, and teams with sample inputs
 - **Agno (AutoAgentComposer)**: Automatically generate new agents and tools based on specifications
-- **MetaAgent (Orchestrator)**: Coordinate specialized agents to fulfill complex tasks
+- **Agent Squad Orchestrator**: Coordinate specialized agents to fulfill complex tasks
 
 ## Getting Started
 
@@ -61,17 +61,22 @@ Comprehensive documentation is available in the `docs/` directory:
 - [Team Development Guide](docs/TEAMS.md) - How to create and register teams
 - [Workflow Guide](docs/WORKFLOWS.md) - How to define and use workflows
 - [CLI Usage Guide](docs/CLI_USAGE.md) - Command-line interface reference
+- [Orchestrator](docs/ORCHESTRATOR.md) - How the Agent Squad orchestrator works
+- [Execution Flow](docs/EXECUTION_FLOW.md) - Detailed execution flow in the system
 - [AutoDevTeam Assembly](docs/AUTO_DEV_TEAM.md) - How core agents work together in Phase 3
 - [Phase Transition](docs/PHASE_TRANSITION.md) - Summary of the transition from Phase 2 to Phase 3
 
 ## Architecture
 
-T-Developer uses the meta-agent orchestration pattern, where specialized agents work together under the coordination of an orchestrator to fulfill complex tasks:
+T-Developer uses the Agent Squad orchestration pattern, where specialized agents work together under the coordination of a SupervisorAgent to fulfill complex tasks:
 
-1. **ClassifierAgent** analyzes code to determine its type (Tool/Agent/Team)
-2. **PlannerAgent** breaks down goals into steps and selects appropriate agents
-3. **EvaluatorAgent** scores workflows for quality and efficiency
-4. **WorkflowExecutorAgent** runs the composed workflows step by step
+1. **SupervisorAgent (DevCoordinator)** coordinates the flow between specialized agents
+2. **ClassifierAgent** analyzes code to determine its type (Tool/Agent/Team)
+3. **PlannerAgent** breaks down goals into steps and selects appropriate agents
+4. **EvaluatorAgent** scores workflows for quality and efficiency
+5. **WorkflowExecutorAgent** runs the composed workflows step by step
+
+T-Developer integrates the AWS Agent Squad framework to provide a more flexible and extensible orchestration mechanism.
 
 Components are classified based on their decision-making complexity (brain count):
 

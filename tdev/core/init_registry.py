@@ -86,14 +86,14 @@ def initialize_registry():
     )
     registry.register("AutoAgentComposerAgent", auto_agent_composer_meta.to_dict())
     
-    # Register MetaAgent (Orchestrator)
-    meta_agent_meta = AgentMeta(
-        name="MetaAgent",
-        class_path="tdev.agents.meta_agent.MetaAgent",
-        description="The central orchestrator that coordinates other agents to fulfill user requests.",
-        tags=["core", "orchestration", "meta"]
+    # Register DevCoordinatorAgent (Agent Squad Orchestrator)
+    dev_coordinator_meta = AgentMeta(
+        name="DevCoordinatorAgent",
+        class_path="tdev.agents.dev_coordinator_agent.DevCoordinatorAgent",
+        description="The central orchestrator that coordinates other agents using Agent Squad.",
+        tags=["core", "orchestration", "agent-squad"]
     )
-    registry.register("MetaAgent", meta_agent_meta.to_dict())
+    registry.register("DevCoordinatorAgent", dev_coordinator_meta.to_dict())
     
     # Register OrchestratorTeam
     orchestrator_team_meta = TeamMeta(

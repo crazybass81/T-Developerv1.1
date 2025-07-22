@@ -14,18 +14,20 @@ T-Developer is designed as a meta-agent system where specialized agents work tog
 - **MetaAgent (Orchestrator)**: The central coordinator that manages the flow between other agents
 - **AutoAgentComposer (Agno)**: The system that generates new agents and tools based on specifications
 
-### Meta-Agent Orchestration
+### Agent Squad Orchestration
 
-The heart of T-Developer is the meta-agent orchestration pattern, where specialized agents work together in a coordinated sequence:
+The heart of T-Developer is the Agent Squad orchestration pattern, where specialized agents work together in a coordinated sequence:
 
-1. **MetaAgent (Orchestrator)** serves as the central coordinator that manages the flow between other agents
+1. **SupervisorAgent (DevCoordinator)** serves as the central coordinator that manages the flow between other agents
 2. **ClassifierAgent** analyzes code to determine its type (Tool/Agent/Team)
 3. **PlannerAgent** breaks down goals into steps and selects appropriate agents or teams
 4. **EvaluatorAgent** scores workflows for quality and efficiency
 5. **WorkflowExecutorAgent** runs the composed workflows step by step
 6. **AutoAgentComposer (Agno)** generates new agents and tools when needed
 
-This orchestration is encapsulated in the **OrchestratorTeam**, which uses the MetaAgent to coordinate these core agents to fulfill a user request. The orchestration allows T-Developer to dynamically assemble solutions from reusable components and even generate new components on demand.
+This orchestration is encapsulated in the **OrchestratorTeam**, which uses the DevCoordinator to coordinate these core agents to fulfill a user request. The orchestration allows T-Developer to dynamically assemble solutions from reusable components and even generate new components on demand.
+
+T-Developer integrates the AWS Agent Squad framework to provide a more flexible and extensible orchestration mechanism, allowing parallel agent execution and intelligent routing, which prepares the system for more complex scenarios and future growth.
 
 ## System Architecture
 
@@ -75,7 +77,7 @@ Workflows define sequences of steps, each referencing an agent to execute. The W
 
 #### 4. Core Agents
 
-- **MetaAgent**: The central orchestrator that coordinates other agents
+- **SupervisorAgent (DevCoordinator)**: The central orchestrator that coordinates other agents using Agent Squad
 - **ClassifierAgent**: Analyzes code to determine its type
 - **PlannerAgent**: Plans workflows by selecting and ordering agents
 - **EvaluatorAgent**: Evaluates workflows for quality and efficiency
@@ -86,7 +88,7 @@ Workflows define sequences of steps, each referencing an agent to execute. The W
 
 #### 5. Core Teams
 
-- **OrchestratorTeam**: Coordinates the core agents (Classifier, Planner, Evaluator, Executor)
+- **OrchestratorTeam**: Coordinates the core agents using the DevCoordinator (Agent Squad)
 - **DoubleEchoTeam**: A simple example team that calls EchoAgent twice in sequence
 
 ## Data Flow

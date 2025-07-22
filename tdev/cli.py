@@ -350,76 +350,55 @@ def run_team(team_name, input):
 @click.option('--code', help='Path to code file to classify')
 @click.option('--options', help='Options as JSON string')
 def orchestrate(goal, code, options):
-    """Orchestrate agents to fulfill a goal."""
+    """Orchestrate agents to fulfill a goal using Agent Squad."""
     click.echo(f"Orchestrating to fulfill goal: {goal}")
     
     # Get the registry
-    from tdev.core.registry import get_registry
     registry = get_registry()
     
-    # Get the OrchestratorTeam
-    team = registry.get_instance("OrchestratorTeam")
-    if not team:
-        click.echo("OrchestratorTeam not found")
-        return
-    
-    # Prepare input data
-    input_data = {"goal": goal}
-    
-    if code:
-        input_data["code"] = code
-    
-    if options:
-        try:
-            input_data["options"] = json.loads(options)
-        except json.JSONDecodeError:
-            click.echo("Invalid JSON in options")
+    # Get the DevCoordinatorAgent directly
+    coordinator = registry.get_instance("DevCoordinatorAgent")
+    if not coordinator:
+        # Fall back to OrchestratorTeam if DevCoordinatorAgent is not found
+        click.echo("DevCoordinatorAgent not found, falling back to OrchestratorTeam")
+        team = registry.get_instance("OrchestratorTeam")
+        if not team:
+            click.echo("OrchestratorTeam not found")
             return
-    
-    # Run the team
-    click.echo("Starting orchestration...")
-    result = team.run(input_data)
-    
-    # Display the result
-    click.echo("Orchestration completed.")
-    click.echo(f"Result: {result}")
-    
-    return result
-
-@main.command()
-@click.argument('goal')
-@click.option('--code', help='Path to code file to classify')
-@click.option('--options', help='Options as JSON string')
-def orchestrate(goal, code, options):
-    """Orchestrate agents to fulfill a goal."""
-    click.echo(f"Orchestrating to fulfill goal: {goal}")
-    
-    # Get the registry
-    from tdev.core.registry import get_registry
-    registry = get_registry()
-    
-    # Get the OrchestratorTeam
-    team = registry.get_instance("OrchestratorTeam")
-    if not team:
-        click.echo("OrchestratorTeam not found")
-        return
-    
-    # Prepare input data
-    input_data = {"goal": goal}
-    
-    if code:
-        input_data["code"] = code
-    
-    if options:
-        try:
-            input_data["options"] = json.loads(options)
-        except json.JSONDecodeError:
-            click.echo("Invalid JSON in options")
-            return
-    
-    # Run the team
-    click.echo("Starting orchestration...")
-    result = team.run(input_data)
+        
+        # Prepare input data for team
+        input_data = {"goal": goal}
+        
+        if code:
+            input_data["code"] = code
+        
+        if options:
+            try:
+                input_data["options"] = json.loads(options)
+            except json.JSONDecodeError:
+                click.echo("Invalid JSON in options")
+                return
+        
+        # Run the team
+        click.echo("Starting orchestration with OrchestratorTeam...")
+        result = team.run(input_data)
+    else:
+        # Prepare request for DevCoordinatorAgent
+        request = {"goal": goal}
+        
+        if code:
+            request["code"] = code
+        
+        if options:
+            try:
+                request["options"] = json.loads(options)
+            except json.JSONDecodeError:
+                click.echo("Invalid JSON in options")
+                return
+        
+        # Run the DevCoordinatorAgent
+        click.echo("Starting orchestration with DevCoordinatorAgent...")
+        result = coordinator.run(request)
     
     # Display the result
     click.echo("Orchestration completed.")

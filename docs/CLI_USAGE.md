@@ -83,7 +83,7 @@ tdev generate tool --spec path/to/specification.json
 
 #### Orchestrate
 
-Use the orchestrator to fulfill a goal:
+Use the Agent Squad orchestrator to fulfill a goal:
 
 ```bash
 tdev orchestrate "Goal description"
@@ -100,6 +100,8 @@ And additional options as JSON:
 ```bash
 tdev orchestrate "Goal description" --options '{"key": "value"}'
 ```
+
+The orchestrate command uses the Agent Squad framework to coordinate the core agents, providing a more flexible and extensible orchestration mechanism.
 
 ### Initialization Commands
 
@@ -252,10 +254,10 @@ tdev compose --name echo-flow --steps EchoAgent
 tdev run echo-flow
 ```
 
-### Using the Orchestrator
+### Using the Agent Squad Orchestrator
 
 ```bash
-# Use the orchestrator to fulfill a goal
+# Use the Agent Squad orchestrator to fulfill a goal
 tdev orchestrate "Echo the input data"
 
 # Orchestrate with a code file
