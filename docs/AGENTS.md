@@ -6,12 +6,22 @@ This guide explains how to create and register agents in the T-Developer system.
 
 In T-Developer, an **Agent** is a component with a single decision point (1 brain) that performs a specific role. Agents are more complex than Tools but simpler than Teams. They can use Tools internally to accomplish their tasks.
 
+### Agents vs. Teams
+
+While both Agents and Teams perform tasks, they differ in complexity:
+
+- **Agents** have a single decision point (1 brain) and typically focus on a specific task
+- **Teams** have multiple decision points (2+ brains) and coordinate multiple agents to accomplish more complex tasks
+
+For information on creating Teams, see the [Team Development Guide](TEAMS.md).
+
 Core agent types in the system include:
 
-- **ClassifierAgent**: Analyzes code to determine its type
-- **PlannerAgent**: Plans workflows by selecting and ordering agents
+- **ClassifierAgent**: Analyzes code to determine its type (Tool/Agent/Team)
+- **PlannerAgent**: Plans workflows by selecting and ordering agents and teams
 - **EvaluatorAgent**: Evaluates workflows for quality and efficiency
 - **WorkflowExecutorAgent**: Executes workflows step by step
+- **TeamExecutorAgent**: Executes teams and their member agents
 - **AgentTesterAgent**: Tests agents with sample inputs
 
 ## Steps to Implement a New Agent
