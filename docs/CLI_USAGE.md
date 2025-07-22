@@ -1,0 +1,200 @@
+# CLI Usage Guide
+
+This guide documents the command-line interface (CLI) for T-Developer.
+
+## Overview
+
+The T-Developer CLI provides commands for:
+- Initializing new agents and tools
+- Classifying components
+- Registering components in the registry
+- Composing workflows
+- Running workflows
+- Testing agents
+
+## Installation
+
+To install the T-Developer CLI:
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/T-Developerv1.1.git
+
+# Install the package
+cd T-Developerv1.1
+pip install -e .
+```
+
+After installation, the `tdev` command will be available in your terminal.
+
+## Command Reference
+
+### Help
+
+To see available commands:
+
+```bash
+tdev --help
+```
+
+To get help for a specific command:
+
+```bash
+tdev <command> --help
+```
+
+### Initialization Commands
+
+#### Initialize Agent
+
+Create a new agent:
+
+```bash
+tdev init agent --name MyAgent
+```
+
+This creates a file at `tdev/agents/my_agent.py` with a basic agent template.
+
+#### Initialize Tool
+
+Create a new tool:
+
+```bash
+tdev init tool --name MyTool
+```
+
+This creates a file at `tdev/tools/my_tool.py` with a basic tool template.
+
+#### Initialize Registry
+
+Initialize the registry with core components:
+
+```bash
+tdev init-registry
+```
+
+This registers the core agents and tools in the registry.
+
+### Classification Commands
+
+#### Classify a File
+
+Analyze a file to determine its type:
+
+```bash
+tdev classify path/to/file.py
+```
+
+This returns the classification (tool, agent, or team) of the file.
+
+### Registration Commands
+
+#### Register a Component
+
+Register an agent or tool in the registry:
+
+```bash
+tdev register path/to/component.py
+```
+
+This adds the component to the registry, making it available for use in workflows.
+
+### Workflow Commands
+
+#### Compose a Workflow
+
+Create a workflow from agents:
+
+```bash
+tdev compose --name my-workflow --steps AgentA,AgentB,AgentC
+```
+
+This creates a workflow definition at `.tdev/workflows/my-workflow.json`.
+
+#### Run a Workflow
+
+Execute a workflow:
+
+```bash
+tdev run my-workflow
+```
+
+This runs the workflow and displays the results.
+
+### Testing Commands
+
+#### Test an Agent
+
+Test an agent with a simple input:
+
+```bash
+tdev test MyAgent
+```
+
+This runs the agent with a test input and reports the result.
+
+### Other Commands
+
+#### Status
+
+Check the status of services (not implemented in the skeleton):
+
+```bash
+tdev status [service-id]
+```
+
+#### Build
+
+Build commands (not implemented in the skeleton):
+
+```bash
+tdev build package
+```
+
+#### Deploy
+
+Deployment commands (not implemented in the skeleton):
+
+```bash
+tdev deploy lambda-function my-service
+```
+
+## Examples
+
+### Creating and Running a Simple Workflow
+
+```bash
+# Initialize the registry
+tdev init-registry
+
+# Create a workflow using the EchoAgent
+tdev compose --name echo-flow --steps EchoAgent
+
+# Run the workflow
+tdev run echo-flow
+```
+
+### Creating and Testing a Custom Agent
+
+```bash
+# Create a new agent
+tdev init agent --name MyCustomAgent
+
+# Edit the agent file at tdev/agents/my_custom_agent.py
+
+# Register the agent
+tdev register tdev/agents/my_custom_agent.py
+
+# Test the agent
+tdev test MyCustomAgent
+```
+
+## Environment Setup
+
+The T-Developer CLI stores its data in the `.tdev` directory in your home directory:
+
+- `.tdev/registry.json`: The component registry
+- `.tdev/workflows/`: Workflow definitions
+- `.tdev/instances/`: Service instance metadata
+
+No special environment variables are required for the basic functionality.
