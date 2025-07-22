@@ -1,5 +1,5 @@
 from tdev.core.registry import get_registry
-from tdev.core.schema import ToolMeta, AgentMeta
+from tdev.core.schema import ToolMeta, AgentMeta, TeamMeta
 
 def initialize_registry():
     """Initialize the registry with core components."""
@@ -67,6 +67,33 @@ def initialize_registry():
         tags=["core", "testing"]
     )
     registry.register("AgentTesterAgent", tester_meta.to_dict())
+    
+    # Register TeamExecutorAgent
+    team_executor_meta = AgentMeta(
+        name="TeamExecutorAgent",
+        class_path="tdev.agents.team_executor_agent.TeamExecutorAgent",
+        description="Agent responsible for executing teams.",
+        tags=["core", "team", "execution"]
+    )
+    registry.register("TeamExecutorAgent", team_executor_meta.to_dict())
+    
+    # Register OrchestratorTeam
+    orchestrator_team_meta = TeamMeta(
+        name="OrchestratorTeam",
+        class_path="tdev.teams.orchestrator_team.OrchestratorTeam",
+        description="Team that coordinates the core agents of T-Developer.",
+        tags=["core", "orchestration"]
+    )
+    registry.register("OrchestratorTeam", orchestrator_team_meta.to_dict())
+    
+    # Register DoubleEchoTeam
+    double_echo_team_meta = TeamMeta(
+        name="DoubleEchoTeam",
+        class_path="tdev.teams.double_echo_team.DoubleEchoTeam",
+        description="A simple team that calls EchoAgent twice in sequence.",
+        tags=["example", "demo"]
+    )
+    registry.register("DoubleEchoTeam", double_echo_team_meta.to_dict())
     
     print("Registry initialized with core components.")
 

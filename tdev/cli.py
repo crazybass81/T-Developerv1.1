@@ -16,11 +16,11 @@ def main():
     config.ensure_registry_exists()
 
 @main.command()
-@click.argument('type', type=click.Choice(['agent', 'tool']))
+@click.argument('type', type=click.Choice(['agent', 'tool', 'team']))
 @click.option('--name', required=True, help='Name of the agent or tool')
 @click.option('--tool', help='Tool to use (for agents only)')
 def init(type, name, tool):
-    """Initialize a new agent or tool."""
+    """Initialize a new agent, tool, or team."""
     if type == 'agent':
         click.echo(f"Initializing agent: {name}")
         # Create agent file
@@ -70,20 +70,84 @@ def {name.lower()}_tool(input_data):
     return input_data
 ''')
         click.echo(f"Created tool at {tool_path}")
+        
+    elif type == 'team':
+        click.echo(f"Initializing team: {name}")
+        # Ensure teams directory exists
+        teams_dir = Path('tdev/teams')
+        teams_dir.mkdir(exist_ok=True)
+        
+        # Create __init__.py if it doesn't exist
+        init_file = teams_dir / "__init__.py"
+        if not init_file.exists():
+            with open(init_file, 'w') as f:
+                f.write("")
+        
+        # Create team file
+        team_path = teams_dir / f"{name.lower()}_team.py"
+        with open(team_path, 'w') as f:
+            f.write(f'''from tdev.core.team import Team
+
+class {name}Team(Team):
+    """
+    {name} team.
+    """
+    
+    def __init__(self):
+        super().__init__()
+        # TODO: add member agents, e.g. self.add_agent("agent1", AgentClass())
+    
+    def run(self, input_data):
+        """
+        Coordinate the team agents.
+        
+        Args:
+            input_data: The input data
+            
+        Returns:
+            The output data
+        """
+        # TODO: implement sequence of agent calls
+        return input_data
+''')
+        click.echo(f"Created team at {team_path}")
 
 @main.command()
 @click.argument('file', type=click.Path(exists=True))
 def classify(file):
     """Classify a file as agent, tool, or team."""
     click.echo(f"Classifying {file}")
-    # Stub implementation - always returns "agent"
-    click.echo("Classification: agent")
-    return "agent"
+    
+    # Get the registry
+    from tdev.core.registry import get_registry
+    registry = get_registry()
+    
+    # Get the ClassifierAgent
+    classifier = registry.get_instance("ClassifierAgent")
+    if not classifier:
+        click.echo("ClassifierAgent not found in registry")
+        # Fallback to simple classification
+        if "team" in file:
+            click.echo("Classification: team")
+            return "team"
+        elif "tool" in file:
+            click.echo("Classification: tool")
+            return "tool"
+        else:
+            click.echo("Classification: agent")
+            return "agent"
+    
+    # Run the classifier
+    result = classifier.run(file)
+    
+    # Display the result
+    click.echo(f"Classification: {result['type']}")
+    return result['type']
 
 @main.command()
 @click.argument('file', type=click.Path(exists=True))
 def register(file):
-    """Register an agent or tool in the registry."""
+    """Register an agent, tool, or team in the registry."""
     click.echo(f"Registering {file}")
     
     # Get file name without extension
@@ -95,6 +159,8 @@ def register(file):
         type = "agent"
     elif "tool" in str(file_path):
         type = "tool"
+    elif "team" in str(file_path):
+        type = "team"
     else:
         type = "unknown"
     
@@ -103,9 +169,29 @@ def register(file):
     with open(registry_path, 'r') as f:
         registry = json.load(f)
     
+    # Set appropriate class path based on type
+    if type == "team":
+        class_path = f"tdev.teams.{name}.{name.capitalize()}Team"
+        brain_count = 2
+        reusability = "D"
+    elif type == "agent":
+        class_path = f"tdev.agents.{name}.{name.capitalize()}Agent"
+        brain_count = 1
+        reusability = "B"
+    elif type == "tool":
+        class_path = f"tdev.tools.{name}.{name.lower()}_tool"
+        brain_count = 0
+        reusability = "A"
+    else:
+        class_path = f"tdev.{name}.{name}"
+        brain_count = 1
+        reusability = "B"
+    
     registry[name] = {
         "type": type,
-        "class": f"tdev.{type}s.{name}.{name.capitalize()}"
+        "class": class_path,
+        "brain_count": brain_count,
+        "reusability": reusability
     }
     
     with open(registry_path, 'w') as f:
@@ -221,6 +307,42 @@ def status(service_id):
         click.echo(f"Not implemented: status of {service_id}")
     else:
         click.echo("Not implemented: status of all services")
+
+@main.command()
+@click.argument('team_name')
+@click.option('--input', '-i', help='Input data as JSON string')
+def run_team(team_name, input):
+    """Run a team by name."""
+    click.echo(f"Running team: {team_name}")
+    
+    # Get the registry
+    from tdev.core.registry import get_registry
+    registry = get_registry()
+    
+    # Get the team
+    team = registry.get_instance(team_name)
+    if not team:
+        click.echo(f"Team not found: {team_name}")
+        return
+    
+    # Parse input data
+    if input:
+        try:
+            input_data = json.loads(input)
+        except json.JSONDecodeError:
+            input_data = {"input": input}
+    else:
+        input_data = {}
+    
+    # Run the team
+    click.echo(f"Executing team {team_name}...")
+    result = team.run(input_data)
+    
+    # Display the result
+    click.echo("Team execution completed.")
+    click.echo(f"Result: {result}")
+    
+    return result
 
 @main.command()
 def init_registry():

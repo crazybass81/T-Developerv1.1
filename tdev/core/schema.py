@@ -4,6 +4,95 @@ from typing import Dict, Any, List, Optional, Union
 MetadataDict = Dict[str, Any]
 SchemaDict = Dict[str, str]
 
+class TeamMeta:
+    """
+    Metadata for a team.
+    """
+    
+    def __init__(
+        self,
+        name: str,
+        type: str = "team",
+        class_path: str = None,
+        description: str = None,
+        brain_count: int = 2,
+        reusability: str = "D",
+        input_schema: Optional[SchemaDict] = None,
+        output_schema: Optional[SchemaDict] = None,
+        tags: Optional[List[str]] = None,
+        path: Optional[str] = None,
+    ):
+        """
+        Initialize team metadata.
+        
+        Args:
+            name: The name of the team
+            type: The type of component ('team')
+            class_path: The import path to the team class
+            description: A description of the team
+            brain_count: The number of decision points (2+ for teams)
+            reusability: The reusability tier ('D' for teams)
+            input_schema: Optional schema for input data
+            output_schema: Optional schema for output data
+            tags: Optional tags for categorization
+            path: Optional path to the team's code file
+        """
+        self.name = name
+        self.type = type
+        self.class_path = class_path
+        self.description = description or f"{name} team"
+        self.brain_count = brain_count
+        self.reusability = reusability
+        self.input_schema = input_schema or {}
+        self.output_schema = output_schema or {}
+        self.tags = tags or []
+        self.path = path
+    
+    def to_dict(self) -> MetadataDict:
+        """
+        Convert the metadata to a dictionary.
+        
+        Returns:
+            A dictionary representation of the metadata
+        """
+        return {
+            "name": self.name,
+            "type": self.type,
+            "class": self.class_path,
+            "description": self.description,
+            "brain_count": self.brain_count,
+            "reusability": self.reusability,
+            "input_schema": self.input_schema,
+            "output_schema": self.output_schema,
+            "tags": self.tags,
+            "path": self.path,
+        }
+    
+    @classmethod
+    def from_dict(cls, data: MetadataDict) -> 'TeamMeta':
+        """
+        Create metadata from a dictionary.
+        
+        Args:
+            data: The dictionary representation of the metadata
+            
+        Returns:
+            A TeamMeta instance
+        """
+        return cls(
+            name=data.get("name"),
+            type=data.get("type", "team"),
+            class_path=data.get("class"),
+            description=data.get("description"),
+            brain_count=data.get("brain_count", 2),
+            reusability=data.get("reusability", "D"),
+            input_schema=data.get("input_schema"),
+            output_schema=data.get("output_schema"),
+            tags=data.get("tags"),
+            path=data.get("path"),
+        )
+
+
 class AgentMeta:
     """
     Metadata for an agent.
