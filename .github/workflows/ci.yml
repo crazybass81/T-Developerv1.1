@@ -1,0 +1,29 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install httpx pytest-httpx  # 명시적으로 추가
+        pip install -e .
+    
+    - name: Run tests
+      env:
+        AWS_DEFAULT_REGION: us-east-1
+        # AWS credentials should be set in GitHub repository secrets
+      run: |
+        pytest --cov=tdev tests/
