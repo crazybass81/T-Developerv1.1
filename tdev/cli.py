@@ -663,7 +663,7 @@ def generate():
 @click.option('--goal', required=True, help='Description of what the agent should do')
 @click.option('--tool', help='Tool to use (for tool wrapper agents)')
 @click.option('--spec', type=click.Path(exists=True), help='Path to a JSON specification file')
-def agent(name, goal, tool, spec):
+def generate_agent(name, goal, tool, spec):
     """Generate a new agent using Agno."""
     click.echo(f"Generating agent: {name}")
     
