@@ -78,6 +78,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - [Tool Development](docs/TOOLS.md) - How to create and register tools
 - [Team Development](docs/TEAMS.md) - How to create and register teams
 - [Workflow Guide](docs/WORKFLOWS.md) - How to define and use workflows
+- [Code Quality](docs/CODE_QUALITY.md) - Guidelines for maintaining code quality
 
 ### System Components
 - [Orchestrator](docs/ORCHESTRATOR.md) - How the Agent Squad orchestrator works
