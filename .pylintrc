@@ -24,7 +24,8 @@ disable=C0111,  # missing docstring
        W0613,   # unused argument
        R1705,   # unnecessary else after return
        R1711,   # useless return
-       C0411    # wrong import order
+       C0411,   # wrong import order
+       E1101    # no-member
 
 [TYPECHECK]
 ignored-classes=AgentRegistry
