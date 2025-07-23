@@ -97,9 +97,9 @@ test_code = f'''...'''
 ### Fix Slack Notifications
 ```yaml
 - name: Notify Slack
-  if: success() && secrets.SLACK_WEBHOOK_URL
-  run: |
-    python scripts/notify_slack.py --message "✅ Success" --status "success"
+  if: ${{ success() && env.SLACK_WEBHOOK_URL != '' }}
   env:
     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  run: |
+    python scripts/notify_slack.py --message "✅ Success" --status "success"
 ```
