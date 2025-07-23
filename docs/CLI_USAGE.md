@@ -122,14 +122,20 @@ tdev test MyAgent --all
 ### Deployment
 
 ```bash
-# Deploy a service
-tdev deploy --service-id my-service --target lambda
+# Deploy an agent to AWS Lambda
+tdev deploy agent MyAgent --target lambda
+
+# Deploy an agent to Bedrock Agent Core
+tdev deploy agent MyAgent --target bedrock --region us-east-1
+
+# Deploy a service (workflow)
+tdev deploy service my-service --target lambda
 
 # Check deployment status
 tdev status my-service
 
-# Rollback a deployment
-tdev rollback my-service --version previous
+# Deploy infrastructure using CloudFormation
+python scripts/deploy_infrastructure.py --stack-name t-developer --environment dev
 ```
 
 ## Advanced Usage
@@ -142,6 +148,26 @@ tdev config set environment development
 
 # Set AWS credentials
 tdev config set aws.region ap-northeast-2
+```
+
+### Monitoring and Feedback
+
+```bash
+# Get metrics for a deployed agent
+tdev monitor metrics MyAgent --time-range 1h
+
+# Get logs for a deployed agent
+tdev monitor logs MyAgent --time-range 1h --limit 10
+
+# Submit feedback for an agent
+tdev feedback MyAgent --rating 5 --comment "Works great!"
+```
+
+### API Server
+
+```bash
+# Start the API server
+tdev serve --port 8000
 ```
 
 ### Debugging
