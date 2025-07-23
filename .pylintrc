@@ -14,4 +14,10 @@ disable=C0111,  # missing docstring
        W0621,   # redefining name from outer scope
        W1514,   # open without encoding
        C0415,   # import outside toplevel
-       W0718    # broad exception caught
+       W0718,   # broad exception caught
+       W0404,   # reimported
+       R1710    # inconsistent-return
+
+[TYPECHECK]
+ignored-classes=AgentRegistry
+generated-members=get,update,get_all,get_by_type

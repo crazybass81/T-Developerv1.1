@@ -52,12 +52,12 @@ class ObserverAgent(Agent):
         # Get agents to monitor
         agents_to_monitor = []
         if agent_name:
-            agent_meta = self.registry.get(agent_name)  # type: ignore[attr-defined]
+            agent_meta = self.registry.get(agent_name)
             if agent_meta and "deployment" in agent_meta:
                 agents_to_monitor.append(agent_meta)
         else:
             # Get all deployed agents
-            for agent_meta in self.registry.get_all().values():  # type: ignore[attr-defined]
+            for agent_meta in self.registry.get_all().values():
                 if "deployment" in agent_meta:
                     agents_to_monitor.append(agent_meta)
         
@@ -260,7 +260,7 @@ class ObserverAgent(Agent):
             Result of feedback collection
         """
         # Get agent from registry
-        agent_meta = self.registry.get(agent_name)  # type: ignore[attr-defined]
+        agent_meta = self.registry.get(agent_name)
         if not agent_meta:
             return {"success": False, "error": f"Agent {agent_name} not found"}
         
@@ -275,7 +275,7 @@ class ObserverAgent(Agent):
         agent_meta["feedback"].append(feedback)
         
         # Update registry
-        self.registry.update(agent_name, agent_meta)  # type: ignore[attr-defined]
+        self.registry.update(agent_name, agent_meta)
         
         # If rating is low, create an issue
         rating = feedback.get("rating", 0)

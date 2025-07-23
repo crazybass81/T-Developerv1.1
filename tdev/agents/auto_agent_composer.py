@@ -62,7 +62,6 @@ class {name}Agent(Agent):
     
     def __init__(self):
         """Initialize the agent."""
-        from tdev.core.registry import get_registry
         self.registry = get_registry()
         self.tool = self.registry.get_instance("{tool_name}")
     

@@ -18,16 +18,16 @@ def main():
     config.ensure_registry_exists()
 
 @main.command()
-@click.argument('type', type=click.Choice(['agent', 'tool', 'team']))
+@click.argument('component_type', type=click.Choice(['agent', 'tool', 'team']))
 @click.option('--name', required=True, help='Name of the agent or tool')
 @click.option('--tool', help='Tool to use (for agents only)')
-def init(type, name, tool):
+def init(component_type, name, tool):
     """Initialize a new agent, tool, or team."""
-    if type == 'agent':
+    if component_type == 'agent':
         click.echo(f"Initializing agent: {name}")
         # Create agent file
         agent_path = Path('tdev/agents') / f"{name.lower()}_agent.py"
-        with open(agent_path, 'w') as f:
+        with open(agent_path, 'w', encoding='utf-8') as f:
             f.write(f'''from tdev.core.agent import Agent
 
 class {name}Agent(Agent):
@@ -50,11 +50,11 @@ class {name}Agent(Agent):
 ''')
         click.echo(f"Created agent at {agent_path}")
     
-    elif type == 'tool':
+    elif component_type == 'tool':
         click.echo(f"Initializing tool: {name}")
         # Create tool file
         tool_path = Path('tdev/tools') / f"{name.lower()}_tool.py"
-        with open(tool_path, 'w') as f:
+        with open(tool_path, 'w', encoding='utf-8') as f:
             f.write(f'''from tdev.core.tool import tool
 
 @tool
@@ -73,7 +73,7 @@ def {name.lower()}_tool(input_data):
 ''')
         click.echo(f"Created tool at {tool_path}")
         
-    elif type == 'team':
+    elif component_type == 'team':
         click.echo(f"Initializing team: {name}")
         # Ensure teams directory exists
         teams_dir = Path('tdev/teams')
@@ -82,12 +82,12 @@ def {name.lower()}_tool(input_data):
         # Create __init__.py if it doesn't exist
         init_file = teams_dir / "__init__.py"
         if not init_file.exists():
-            with open(init_file, 'w') as f:
+            with open(init_file, 'w', encoding='utf-8') as f:
                 f.write("")
         
         # Create team file
         team_path = teams_dir / f"{name.lower()}_team.py"
-        with open(team_path, 'w') as f:
+        with open(team_path, 'w', encoding='utf-8') as f:
             f.write(f'''from tdev.core.team import Team
 
 class {name}Team(Team):
@@ -121,7 +121,6 @@ def classify(file):
     click.echo(f"Classifying {file}")
     
     # Get the registry
-    from tdev.core.registry import get_registry
     registry = get_registry()
     
     # Get the ClassifierAgent
@@ -158,29 +157,29 @@ def register(file):
     
     # Determine type based on directory
     if "agent" in str(file_path):
-        type = "agent"
+        component_type = "agent"
     elif "tool" in str(file_path):
-        type = "tool"
+        component_type = "tool"
     elif "team" in str(file_path):
-        type = "team"
+        component_type = "team"
     else:
-        type = "unknown"
+        component_type = "unknown"
     
     # Add to registry
     registry_path = config.get_registry_path()
-    with open(registry_path, 'r') as f:
+    with open(registry_path, 'r', encoding='utf-8') as f:
         registry = json.load(f)
     
     # Set appropriate class path based on type
-    if type == "team":
+    if component_type == "team":
         class_path = f"tdev.teams.{name}.{name.capitalize()}Team"
         brain_count = 2
         reusability = "D"
-    elif type == "agent":
+    elif component_type == "agent":
         class_path = f"tdev.agents.{name}.{name.capitalize()}Agent"
         brain_count = 1
         reusability = "B"
-    elif type == "tool":
+    elif component_type == "tool":
         class_path = f"tdev.tools.{name}.{name.lower()}_tool"
         brain_count = 0
         reusability = "A"
@@ -190,16 +189,16 @@ def register(file):
         reusability = "B"
     
     registry[name] = {
-        "type": type,
+        "type": component_type,
         "class": class_path,
         "brain_count": brain_count,
         "reusability": reusability
     }
     
-    with open(registry_path, 'w') as f:
+    with open(registry_path, 'w', encoding='utf-8') as f:
         json.dump(registry, f, indent=2)
     
-    click.echo(f"Registered {name} as {type}")
+    click.echo(f"Registered {name} as {component_type}")
 
 @main.command()
 @click.option('--name', required=True, help='Name of the workflow')
@@ -221,7 +220,7 @@ def compose(name, steps):
     workflows_dir = config.get_workflows_dir()
     workflow_path = workflows_dir / f"{name}.json"
     
-    with open(workflow_path, 'w') as f:
+    with open(workflow_path, 'w', encoding='utf-8') as f:
         json.dump(workflow, f, indent=2)
     
     click.echo(f"Created workflow at {workflow_path}")
@@ -241,7 +240,7 @@ def run(workflow_id):
         return
     
     # Load workflow
-    with open(workflow_path, 'r') as f:
+    with open(workflow_path, 'r', encoding='utf-8') as f:
         workflow = json.load(f)
     
     # Execute steps (stub)
@@ -259,7 +258,6 @@ def test(agent_name):
     click.echo(f"Testing agent: {agent_name}")
     
     # Get the registry
-    from tdev.core.registry import get_registry
     registry = get_registry()
     
     # Get the AgentTesterAgent
@@ -310,7 +308,7 @@ def agent(agent_name, target, region):
     registry = get_registry()
     
     # Check if agent exists
-    agent_meta = registry.get(agent_name)  # type: ignore[attr-defined]
+    agent_meta = registry.get(agent_name)
     if not agent_meta:
         click.echo(f"Agent {agent_name} not found in registry")
         return
@@ -370,7 +368,7 @@ def service(service_id, target):
         return
     
     # Load workflow
-    with open(workflow_path, 'r') as f:
+    with open(workflow_path, 'r', encoding='utf-8') as f:
         workflow = json.load(f)
     
     # Deploy service (stub implementation)
@@ -385,7 +383,7 @@ def service(service_id, target):
         "status": "deployed",
         "timestamp": str(datetime.now())
     }
-    registry.update(service_id, service_meta)  # type: ignore[attr-defined]
+    registry.update(service_id, service_meta)
 
 @main.command()
 @click.argument('service_id', required=False)
@@ -426,7 +424,7 @@ def status(service_id):
     else:
         # List all deployed services
         deployed_services = []
-        for name, meta in registry.get_all().items():  # type: ignore[attr-defined]
+        for name, meta in registry.get_all().items():
             if "deployment" in meta:
                 deployed_services.append((name, meta["deployment"]))
         
@@ -563,7 +561,6 @@ def run_team(team_name, input):
     click.echo(f"Running team: {team_name}")
     
     # Get the registry
-    from tdev.core.registry import get_registry
     registry = get_registry()
     
     # Get the team
@@ -681,7 +678,7 @@ def agent(name, goal, tool, spec):
     
     # Prepare the specification
     if spec:
-        with open(spec, 'r') as f:
+        with open(spec, 'r', encoding='utf-8') as f:
             specification = json.load(f)
     else:
         specification = {
@@ -721,7 +718,7 @@ def tool(name, goal, spec):
     
     # Prepare the specification
     if spec:
-        with open(spec, 'r') as f:
+        with open(spec, 'r', encoding='utf-8') as f:
             specification = json.load(f)
     else:
         specification = {
