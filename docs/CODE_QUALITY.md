@@ -29,6 +29,9 @@ As we improve the codebase, we should aim to:
 | **Line Too Long** | Lines exceeding max length | Break into multiple lines or use parentheses |
 | **Reimported** | Module imported multiple times | Consolidate imports at the top of the file |
 | **No Member** | Attribute not found in class | Add to `generated-members` in `.pylintrc` |
+| **Duplicate Function** | Function defined twice | Rename one of the functions |
+| **Unnecessary Else** | Else after return | Remove the else and dedent the code |
+| **Useless Return** | Return at end of function | Remove the unnecessary return |
 
 ## CI Pipeline
 
@@ -36,7 +39,7 @@ Our CI pipeline in GitHub Actions:
 
 1. **Checks Python syntax** using `compileall`
 2. **Runs Pylint** with our configuration
-3. **Uses pylint-exit** to only fail on errors
+3. **Uses pylint-exit** to only fail on errors and warnings
 4. **Runs tests** with coverage
 5. **Tests template strings** for validity
 6. **Tests core agents** and agent generation
@@ -51,7 +54,7 @@ Pylint uses bit-encoded exit codes:
 - 8: Refactor message issued
 - 16: Convention message issued
 
-We use `pylint-exit --error-fail` to only fail the build on fatal or error messages (bits 1 and 2).
+We use `pylint-exit --error-fail --warning-fail` to only fail the build on fatal, error, or warning messages (bits 1, 2, and 4).
 
 ## Best Practices for Developers
 
@@ -67,5 +70,14 @@ We use `pylint-exit --error-fail` to only fail the build on fatal or error messa
 2. **100% Test Coverage**: Add tests for all code paths
 3. **Automated Documentation**: Keep documentation in sync with code
 4. **Type Annotations**: Add type hints to improve code clarity and catch errors
+
+## Recommended IDE Setup
+
+For the best development experience, configure your IDE with:
+
+1. **Pylint Integration**: Run linting as you code
+2. **Auto-formatting**: Use tools like Black or YAPF
+3. **Import Sorting**: Use isort to automatically organize imports
+4. **Pre-commit Hooks**: Set up pre-commit to run checks before committing
 
 By following these guidelines, we can maintain high code quality while allowing for efficient development.
