@@ -65,9 +65,9 @@ class ClassifierAgent(Agent):
     def _is_team(self, content):
         """Check if the content defines a Team."""
         # Check for Team import and inheritance
-        return ("from tdev.core.team import Team" in content or 
-                "import Team" in content) and 
-               ("class" in content and "(Team)" in content)
+        has_import = ("from tdev.core.team import Team" in content or "import Team" in content)
+        has_class = ("class" in content and "(Team)" in content)
+        return has_import and has_class
     
     def _is_tool(self, content):
         """Check if the content defines a Tool."""
