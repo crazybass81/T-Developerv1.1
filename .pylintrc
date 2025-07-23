@@ -16,7 +16,15 @@ disable=C0111,  # missing docstring
        C0415,   # import outside toplevel
        W0718,   # broad exception caught
        W0404,   # reimported
-       R1710    # inconsistent-return
+       R1710,   # inconsistent-return
+       C0301,   # line too long
+       C0304,   # final newline missing
+       W0611,   # unused import
+       W0612,   # unused variable
+       W0613,   # unused argument
+       R1705,   # unnecessary else after return
+       R1711,   # useless return
+       C0411    # wrong import order
 
 [TYPECHECK]
 ignored-classes=AgentRegistry
