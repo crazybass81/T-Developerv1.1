@@ -283,7 +283,6 @@ def test(agent_name):
 @main.group()
 def build():
     """Build commands (not implemented)."""
-    pass
 
 @build.command()
 def package():
@@ -293,11 +292,15 @@ def package():
 @main.group()
 def deploy():
     """Deployment commands for agents and services."""
-    pass
 
 @deploy.command()
 @click.argument('agent_name')
-@click.option('--target', default='lambda', type=click.Choice(['lambda', 'bedrock']), help='Deployment target')
+@click.option(
+    '--target', 
+    default='lambda', 
+    type=click.Choice(['lambda', 'bedrock']), 
+    help='Deployment target'
+)
 @click.option('--region', help='AWS region')
 def agent(agent_name, target, region):
     """Deploy an agent to AWS."""
@@ -307,7 +310,7 @@ def agent(agent_name, target, region):
     registry = get_registry()
     
     # Check if agent exists
-    agent_meta = registry.get(agent_name)
+    agent_meta = registry.get(agent_name)  # type: ignore[attr-defined]
     if not agent_meta:
         click.echo(f"Agent {agent_name} not found in registry")
         return
@@ -345,7 +348,12 @@ def agent(agent_name, target, region):
 
 @deploy.command()
 @click.argument('service_id')
-@click.option('--target', default='lambda', type=click.Choice(['lambda', 'ecs', 'local']), help='Deployment target')
+@click.option(
+    '--target', 
+    default='lambda', 
+    type=click.Choice(['lambda', 'ecs', 'local']), 
+    help='Deployment target'
+)
 def service(service_id, target):
     """Deploy a composed service to AWS."""
     click.echo(f"Deploying service {service_id} to {target}...")
@@ -377,7 +385,7 @@ def service(service_id, target):
         "status": "deployed",
         "timestamp": str(datetime.now())
     }
-    registry.update(service_id, service_meta)
+    registry.update(service_id, service_meta)  # type: ignore[attr-defined]
 
 @main.command()
 @click.argument('service_id', required=False)
@@ -418,7 +426,7 @@ def status(service_id):
     else:
         # List all deployed services
         deployed_services = []
-        for name, meta in registry.get_all().items():
+        for name, meta in registry.get_all().items():  # type: ignore[attr-defined]
             if "deployment" in meta:
                 deployed_services.append((name, meta["deployment"]))
         
@@ -428,17 +436,21 @@ def status(service_id):
         
         click.echo("Deployed services:")
         for name, deployment in deployed_services:
-            click.echo(f"  {name}: {deployment.get('type', 'unknown')} - {deployment.get('status', 'unknown')}")
+            status_str = f"  {name}: {deployment.get('type', 'unknown')} - {deployment.get('status', 'unknown')}"
+            click.echo(status_str)
 
 @main.group()
 def monitor():
     """Monitoring commands for deployed agents."""
-    pass
 
 @monitor.command()
 @click.argument('agent_name', required=False)
 @click.option('--time-range', default='1h', help='Time range (e.g., 1h, 1d)')
-@click.option('--metrics', default='invocations,errors,duration', help='Comma-separated list of metrics')
+@click.option(
+    '--metrics', 
+    default='invocations,errors,duration', 
+    help='Comma-separated list of metrics'
+)
 def metrics(agent_name, time_range, metrics):
     """Get metrics for deployed agents."""
     # Get the registry
@@ -522,7 +534,9 @@ def logs(agent_name, time_range, limit):
         click.echo(f"No logs found for {agent_name} in the last {time_range}")
         return
     
-    click.echo(f"Logs for {agent_name} (last {time_range}, showing {min(limit, len(events))} of {len(events)} entries):")
+    log_count = len(events)
+    shown_count = min(limit, log_count)
+    click.echo(f"Logs for {agent_name} (last {time_range}, showing {shown_count} of {log_count} entries):")
     for event in events[:limit]:
         timestamp = datetime.fromtimestamp(event.get("timestamp", 0) / 1000).strftime('%Y-%m-%d %H:%M:%S')
         click.echo(f"[{timestamp}] {event.get('message', '')}")
@@ -646,7 +660,6 @@ def init_registry():
 @main.group()
 def generate():
     """Generate new components using Agno."""
-    pass
 
 @generate.command()
 @click.option('--name', required=True, help='Name of the agent')

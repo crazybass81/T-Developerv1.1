@@ -6,10 +6,11 @@ for continuous improvement of agents.
 """
 import os
 import json
-import boto3
-import requests
 from datetime import datetime
 from typing import Dict, Any, List, Optional
+
+import boto3
+import requests
 
 from tdev.core.registry import get_registry
 
@@ -42,7 +43,7 @@ class FeedbackCollector:
             return {"success": False, "error": "Agent name is required"}
         
         # Get agent from registry
-        agent_meta = self.registry.get(agent_name)
+        agent_meta = self.registry.get(agent_name)  # type: ignore[attr-defined]
         if not agent_meta:
             return {"success": False, "error": f"Agent {agent_name} not found"}
         
@@ -73,7 +74,7 @@ class FeedbackCollector:
             agent_name: Name of the agent
             feedback_data: Feedback data
         """
-        agent_meta = self.registry.get(agent_name)
+        agent_meta = self.registry.get(agent_name)  # type: ignore[attr-defined]
         
         # Initialize feedback list if not exists
         if "feedback" not in agent_meta:
@@ -87,7 +88,7 @@ class FeedbackCollector:
             agent_meta["feedback"] = agent_meta["feedback"][-100:]
         
         # Update registry
-        self.registry.update(agent_name, agent_meta)
+        self.registry.update(agent_name, agent_meta)  # type: ignore[attr-defined]  # type: ignore[attr-defined]
     
     def _store_in_dynamodb(self, feedback_data: Dict[str, Any]) -> None:
         """
@@ -187,7 +188,7 @@ Please review this agent's behavior and improve it based on the feedback.
         """
         if agent_name:
             # Get feedback for a specific agent
-            agent_meta = self.registry.get(agent_name)
+            agent_meta = self.registry.get(agent_name)  # type: ignore[attr-defined]
             if not agent_meta:
                 return {"success": False, "error": f"Agent {agent_name} not found"}
             
@@ -197,15 +198,15 @@ Please review this agent's behavior and improve it based on the feedback.
                 "agent_name": agent_name,
                 "feedback": feedback[-limit:] if limit < len(feedback) else feedback
             }
-        else:
-            # Get feedback for all agents
-            all_feedback = {}
-            for name, meta in self.registry.get_all().items():
-                feedback = meta.get("feedback", [])
-                if feedback:
-                    all_feedback[name] = feedback[-limit:] if limit < len(feedback) else feedback
             
-            return {
-                "success": True,
-                "feedback": all_feedback
-            }
+        # Get feedback for all agents
+        all_feedback = {}
+        for name, meta in self.registry.get_all().items():  # type: ignore[attr-defined]
+            feedback = meta.get("feedback", [])
+            if feedback:
+                all_feedback[name] = feedback[-limit:] if limit < len(feedback) else feedback
+        
+        return {
+            "success": True,
+            "feedback": all_feedback
+        }

@@ -1,0 +1,17 @@
+[FORMAT]
+max-line-length=120
+
+[MESSAGES CONTROL]
+disable=C0111,  # missing docstring
+       C0103,   # invalid name
+       C0303,   # trailing whitespace
+       W0511,   # fixme
+       R0903,   # too few public methods
+       R0913,   # too many arguments
+       R0914,   # too many local variables
+       R0801,   # duplicate code
+       W0622,   # redefining built-in
+       W0621,   # redefining name from outer scope
+       W1514,   # open without encoding
+       C0415,   # import outside toplevel
+       W0718    # broad exception caught

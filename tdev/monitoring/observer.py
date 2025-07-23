@@ -52,12 +52,12 @@ class ObserverAgent(Agent):
         # Get agents to monitor
         agents_to_monitor = []
         if agent_name:
-            agent_meta = self.registry.get(agent_name)
+            agent_meta = self.registry.get(agent_name)  # type: ignore[attr-defined]
             if agent_meta and "deployment" in agent_meta:
                 agents_to_monitor.append(agent_meta)
         else:
             # Get all deployed agents
-            for agent_meta in self.registry.get_all().values():
+            for agent_meta in self.registry.get_all().values():  # type: ignore[attr-defined]
                 if "deployment" in agent_meta:
                     agents_to_monitor.append(agent_meta)
         
@@ -108,12 +108,12 @@ class ObserverAgent(Agent):
         
         if unit == "m":
             return value * 60
-        elif unit == "h":
+        if unit == "h":
             return value * 3600
-        elif unit == "d":
+        if unit == "d":
             return value * 86400
-        else:
-            return 3600  # Default to 1 hour
+        
+        return 3600  # Default to 1 hour
     
     def _collect_metrics(self, function_name: str, seconds: int, metrics: List[str]) -> Dict[str, Any]:
         """
@@ -260,7 +260,7 @@ class ObserverAgent(Agent):
             Result of feedback collection
         """
         # Get agent from registry
-        agent_meta = self.registry.get(agent_name)
+        agent_meta = self.registry.get(agent_name)  # type: ignore[attr-defined]
         if not agent_meta:
             return {"success": False, "error": f"Agent {agent_name} not found"}
         
@@ -275,7 +275,7 @@ class ObserverAgent(Agent):
         agent_meta["feedback"].append(feedback)
         
         # Update registry
-        self.registry.update(agent_name, agent_meta)
+        self.registry.update(agent_name, agent_meta)  # type: ignore[attr-defined]
         
         # If rating is low, create an issue
         rating = feedback.get("rating", 0)
