@@ -32,7 +32,7 @@ class AutoAgentComposer(Agent):
             print(f"Warning: Could not initialize Bedrock client: {e}")
         self.templates = {
             "agent": {
-                "simple": """from tdev.core.agent import Agent
+                "simple": '''from tdev.core.agent import Agent
 
 class {name}Agent(Agent):
     """
@@ -52,8 +52,8 @@ class {name}Agent(Agent):
         # TODO: Implement agent logic
         {implementation}
         return result
-""",
-                "tool_wrapper": """from tdev.core.agent import Agent
+''',
+                "tool_wrapper": '''from tdev.core.agent import Agent
 
 class {name}Agent(Agent):
     """
@@ -79,10 +79,10 @@ class {name}Agent(Agent):
         # Use the tool to process the input
         result = self.tool.run(input_data)
         return result
-"""
+'''
             },
             "tool": {
-                "simple": """from tdev.core.tool import tool
+                "simple": '''from tdev.core.tool import tool
 
 @tool
 def {name_lower}_tool(input_data):
@@ -98,7 +98,7 @@ def {name_lower}_tool(input_data):
     # TODO: Implement tool logic
     {implementation}
     return result
-"""
+'''
             }
         }
     
@@ -261,8 +261,8 @@ def {name_lower}_tool(input_data):
         
         # If we have tools, generate code to use them
         if tools:
-            tool_code = """# Use available tools to process the input
-        """
+            tool_code = '''# Use available tools to process the input
+        '''
             for i, tool in enumerate(tools):
                 tool_var = f"tool{i+1}"
                 tool_code += f"\n        {tool_var} = self.registry.get_instance(\"{tool}\")\n"
@@ -301,7 +301,7 @@ def {name_lower}_tool(input_data):
             # Prepare the prompt for Bedrock
             tools_str = ", ".join(tools) if tools else "None"
             
-            prompt = f"""You are an AI code generator. Your task is to generate Python code for a {component_type} in the T-Developer framework.
+            prompt = f'''You are an AI code generator. Your task is to generate Python code for a {component_type} in the T-Developer framework.
 
 Details:
 - Name: {name}
@@ -322,7 +322,7 @@ Generate ONLY the implementation code (function/method body), not the entire cla
 Do not include the function/method signature or decorators.
 
 Code:
-"""
+'''
             
             # Call Bedrock to generate the code
             model_id = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-v2")
@@ -415,22 +415,26 @@ Code:
         test_file_path = test_dir / test_filename
         
         # Generate a basic test
-        test_code = f"""import pytest
+        # Prepare the code based on component type
+        arrange_code = f"agent = {component_name}()" if component_type == 'agent' else "pass"
+        act_code = f"result = agent.run(input_data)" if component_type == 'agent' else f"result = {component_name}(input_data)"
+        
+        test_code = f'''import pytest
 from {import_path} import {component_name}
 
 def test_{name.lower()}_basic():
     """Test that the {component_name} works with basic input."""
     # Arrange
-    {'agent = ' + component_name + '()' if component_type == 'agent' else 'pass'}
+    {arrange_code}
     input_data = "test_input"  # Replace with appropriate test input
     
     # Act
-    {'result = agent.run(input_data)' if component_type == 'agent' else 'result = ' + component_name + '(input_data)'}
+    {act_code}
     
     # Assert
     assert result is not None
     # Add more specific assertions based on expected behavior
-"""
+'''
         
         with open(test_file_path, "w") as f:
             f.write(test_code)
