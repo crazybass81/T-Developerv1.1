@@ -109,6 +109,7 @@ def {name_lower}_tool(input_data):
                 - input: Description of input data
                 - output: Description of output data
                 - template: Template to use (e.g., "simple", "tool_wrapper")
+                - implementation_hints: Hints for implementing the component
                 
         Returns:
             A dictionary containing the result of the generation:
@@ -129,12 +130,18 @@ def {name_lower}_tool(input_data):
         input_desc = spec.get("input", "The input data")
         output_desc = spec.get("output", "The output data")
         template_name = spec.get("template", "simple")
+        implementation_hints = spec.get("implementation_hints", "")
+        
+        # Analyze available tools that might be useful
+        available_tools = self._find_relevant_tools(goal)
+        if available_tools and not tools:
+            tools = [tool["name"] for tool in available_tools[:2]]  # Use up to 2 relevant tools
         
         # Generate the code
         if component_type == "agent":
-            code, metadata = self._generate_agent(name, goal, tools, input_desc, output_desc, template_name)
+            code, metadata = self._generate_agent(name, goal, tools, input_desc, output_desc, template_name, implementation_hints)
         elif component_type == "tool":
-            code, metadata = self._generate_tool(name, goal, input_desc, output_desc, template_name)
+            code, metadata = self._generate_tool(name, goal, input_desc, output_desc, template_name, implementation_hints)
         else:
             return {"success": False, "error": f"Unknown component type: {component_type}"}
         
@@ -144,13 +151,18 @@ def {name_lower}_tool(input_data):
         # Register the component
         self._register_component(metadata)
         
+        # Generate tests for the component
+        test_file_path = self._generate_tests(component_type, name, goal, input_desc, output_desc)
+        
         return {
             "success": True,
             "path": str(file_path),
-            "metadata": metadata.to_dict()
+            "test_path": str(test_file_path) if test_file_path else None,
+            "metadata": metadata.to_dict(),
+            "used_tools": tools
         }
     
-    def _generate_agent(self, name, goal, tools, input_desc, output_desc, template_name):
+    def _generate_agent(self, name, goal, tools, input_desc, output_desc, template_name, implementation_hints=""):
         """Generate code for an agent."""
         # Choose the template
         if tools and template_name == "tool_wrapper":
@@ -159,7 +171,7 @@ def {name_lower}_tool(input_data):
             tool_name = tools[0] if isinstance(tools, list) else tools
         else:
             template = self.templates["agent"]["simple"]
-            implementation = "result = input_data  # Replace with actual implementation"
+            implementation = self._generate_implementation("agent", name, goal, tools, implementation_hints)
             tool_name = ""
         
         # Format the template
@@ -177,15 +189,19 @@ def {name_lower}_tool(input_data):
             name=f"{name}Agent",
             class_path=f"tdev.agents.{name.lower()}_agent.{name}Agent",
             description=goal,
-            tags=["generated", "agno"]
+            tags=["generated", "agno"],
+            tools=tools
         )
         
         return code, metadata
     
-    def _generate_tool(self, name, goal, input_desc, output_desc, template_name):
+    def _generate_tool(self, name, goal, input_desc, output_desc, template_name, implementation_hints=""):
         """Generate code for a tool."""
         # Choose the template
         template = self.templates["tool"]["simple"]
+        
+        # Generate implementation based on the goal
+        implementation = self._generate_implementation("tool", name, goal, [], implementation_hints)
         
         # Format the template
         code = template.format(
@@ -194,7 +210,7 @@ def {name_lower}_tool(input_data):
             description=goal,
             input_desc=input_desc,
             output_desc=output_desc,
-            implementation="result = input_data  # Replace with actual implementation"
+            implementation=implementation
         )
         
         # Create metadata
@@ -206,6 +222,114 @@ def {name_lower}_tool(input_data):
         )
         
         return code, metadata
+        
+    def _generate_implementation(self, component_type, name, goal, tools, implementation_hints=""):
+        """Generate implementation code based on the goal and available tools."""
+        # In a production system, this would use an LLM to generate the implementation
+        # For now, we'll generate a more intelligent stub based on the goal
+        
+        # Default implementation
+        default_impl = "result = input_data  # Replace with actual implementation"
+        
+        # If we have implementation hints, use them
+        if implementation_hints:
+            return f"# Implementation based on hints:\n        # {implementation_hints}\n        {default_impl}"
+        
+        # Generate implementation based on the goal
+        if "echo" in goal.lower() or "repeat" in goal.lower():
+            return "result = input_data  # Simple echo implementation"
+        
+        if "transform" in goal.lower() or "convert" in goal.lower():
+            return "# Transform the input data\n        # This is a placeholder for the transformation logic\n        result = self._transform_data(input_data)\n        \n    def _transform_data(self, data):\n        # Implement the transformation logic here\n        return data  # Replace with actual transformation"
+        
+        if "analyze" in goal.lower() or "process" in goal.lower():
+            return "# Analyze the input data\n        # This is a placeholder for the analysis logic\n        result = {}\n        result['analysis'] = 'Analysis of ' + str(input_data)\n        result['processed'] = True\n        return result"
+        
+        if "fetch" in goal.lower() or "retrieve" in goal.lower() or "get" in goal.lower():
+            return "# Fetch data from a source\n        # This is a placeholder for the fetching logic\n        import requests\n        \n        # Example: Make an API request\n        # url = f'https://api.example.com/data?q={input_data}'\n        # response = requests.get(url)\n        # result = response.json()\n        \n        # For now, return a mock result\n        result = {'data': f'Fetched data for: {input_data}', 'status': 'success'}\n        return result"
+        
+        # If we have tools, generate code to use them
+        if tools:
+            tool_code = """# Use available tools to process the input
+        """
+            for i, tool in enumerate(tools):
+                tool_var = f"tool{i+1}"
+                tool_code += f"\n        {tool_var} = self.registry.get_instance(\"{tool}\")\n"
+            
+            tool_code += "\n        # Process with tools\n"
+            if len(tools) == 1:
+                tool_code += "        result = tool1.run(input_data)\n"
+            else:
+                tool_code += "        intermediate = tool1.run(input_data)\n"
+                for i in range(1, len(tools)):
+                    if i == len(tools) - 1:
+                        tool_code += f"        result = tool{i+1}.run(intermediate)\n"
+                    else:
+                        tool_code += f"        intermediate = tool{i+1}.run(intermediate)\n"
+            
+            return tool_code
+        
+        # Default implementation with a TODO comment
+        return f"# TODO: Implement {component_type} logic for: {goal}\n        {default_impl}"
+    
+    def _find_relevant_tools(self, goal):
+        """Find tools that might be relevant for the given goal."""
+        available_tools = self.registry.get_by_type("tool")
+        relevant_tools = []
+        
+        # Simple keyword matching for now
+        # In a production system, this would use semantic similarity or an LLM
+        keywords = goal.lower().split()
+        for tool in available_tools:
+            tool_desc = tool.get("description", "").lower()
+            if any(keyword in tool_desc for keyword in keywords):
+                relevant_tools.append(tool)
+        
+        return relevant_tools
+    
+    def _generate_tests(self, component_type, name, goal, input_desc, output_desc):
+        """Generate tests for the component."""
+        # In a production system, this would generate actual test cases
+        # For now, we'll just create a test file with a basic test
+        
+        if component_type == "agent":
+            test_dir = Path("tests/agents")
+            test_filename = f"test_{name.lower()}_agent.py"
+            component_name = f"{name}Agent"
+            import_path = f"tdev.agents.{name.lower()}_agent"
+        else:  # tool
+            test_dir = Path("tests/tools")
+            test_filename = f"test_{name.lower()}_tool.py"
+            component_name = f"{name.lower()}_tool"
+            import_path = f"tdev.tools.{name.lower()}_tool"
+        
+        # Create test directory if it doesn't exist
+        test_dir.mkdir(parents=True, exist_ok=True)
+        
+        test_file_path = test_dir / test_filename
+        
+        # Generate a basic test
+        test_code = f"""import pytest
+from {import_path} import {component_name}
+
+def test_{name.lower()}_basic():
+    """Test that the {component_name} works with basic input."""
+    # Arrange
+    {'agent = ' + component_name + '()' if component_type == 'agent' else 'pass'}
+    input_data = "test_input"  # Replace with appropriate test input
+    
+    # Act
+    {'result = agent.run(input_data)' if component_type == 'agent' else 'result = ' + component_name + '(input_data)'}
+    
+    # Assert
+    assert result is not None
+    # Add more specific assertions based on expected behavior
+"""
+        
+        with open(test_file_path, "w") as f:
+            f.write(test_code)
+        
+        return test_file_path
     
     def _save_code(self, component_type, name, code):
         """Save the generated code to a file."""

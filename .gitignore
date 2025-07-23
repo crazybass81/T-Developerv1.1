@@ -22,10 +22,13 @@ var/
 
 # T-Developer runtime files
 .tdev/
+!.tdev/registry/.gitkeep
+!.tdev/workflows/.gitkeep
 
 # Virtual Environment
 venv/
 ENV/
+.env/
 
 # IDE files
 .idea/
@@ -35,3 +38,20 @@ ENV/
 
 # OS specific
 .DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Logs
+*.log
+logs/
+
+# AWS
+.aws-sam/
+.aws/
+
+# Generated files
+generated/

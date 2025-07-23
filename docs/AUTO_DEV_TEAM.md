@@ -1,118 +1,109 @@
-# AutoDevTeam Assembly Approach
-
-This document outlines how the core agents work together in Phase 3 of T-Developer as the AutoDevTeam, coordinated by the SupervisorAgent (DevCoordinator) using Agent Squad.
+# AutoDevTeam Assembly
 
 ## Overview
 
-The AutoDevTeam is a coordinated group of specialized agents that work together to fulfill user requests end-to-end. The SupervisorAgent (DevCoordinator) serves as the central orchestrator that sequences the other agents in the appropriate order.
+The **AutoDevTeam** is the core assembly of agents that work together to automate the software development process in T-Developer v1.1. This document explains how these agents collaborate to form a virtual development team capable of understanding requirements, planning solutions, generating code, and deploying applications.
 
 ## Team Composition
 
-The AutoDevTeam consists of the following core agents:
+The AutoDevTeam consists of the following specialized agents:
 
-1. **SupervisorAgent (DevCoordinator)**: The central coordinator that manages the flow between other agents using Agent Squad
-2. **ClassifierAgent**: Analyzes code to classify it as Tool, Agent, or Team
-3. **PlannerAgent**: Plans workflows by selecting and ordering appropriate agents
-4. **EvaluatorAgent**: Evaluates workflows for quality and efficiency
-5. **WorkflowExecutorAgent**: Executes workflows step by step
-6. **AutoAgentComposer (Agno)**: Generates new agents when needed
+1. **SupervisorAgent (DevCoordinator)**: The team lead that coordinates all other agents
+2. **ClassifierAgent**: Analyzes code to determine its type and characteristics
+3. **PlannerAgent**: Breaks down goals into actionable steps
+4. **EvaluatorAgent**: Reviews plans and code for quality and correctness
+5. **WorkflowExecutorAgent**: Executes the planned steps
+6. **AutoAgentComposer (Agno)**: Generates new agents and tools as needed
 
-## Interaction Pattern
+## Roles and Responsibilities
 
-The interaction pattern follows this sequence:
+### SupervisorAgent (DevCoordinator)
 
-1. **User Request**: The user submits a goal or code to the DevCoordinator
-2. **Classification (if code provided)**: The DevCoordinator invokes the ClassifierAgent to analyze the code
-3. **Planning**: The DevCoordinator invokes the PlannerAgent to generate a workflow plan
-4. **Evaluation**: The DevCoordinator invokes the EvaluatorAgent to assess the plan's quality
-5. **Refinement (if needed)**: If the evaluation score is below threshold, the DevCoordinator requests the PlannerAgent to refine the plan
-6. **Execution**: The DevCoordinator invokes the WorkflowExecutorAgent to run the workflow
-7. **Dynamic Agent Generation (if needed)**: If the PlannerAgent identifies a missing capability, the DevCoordinator invokes the AutoAgentComposer to generate a new agent
+- Acts as the team lead and central coordinator
+- Manages the overall workflow and decision-making process
+- Delegates tasks to specialized agents
+- Handles exceptions and adjusts plans as needed
+- Ensures the final output meets the user's requirements
 
-## Data Flow
+### ClassifierAgent
 
-The data flows between agents as follows:
+- Analyzes code to determine if it's a Tool, Agent, or Team
+- Identifies the "brain count" of components
+- Extracts metadata from code (name, description, inputs, outputs)
+- Helps maintain the component registry by classifying new additions
 
-1. **User → DevCoordinator**: Goal description and optional code
-2. **DevCoordinator → ClassifierAgent**: Code to classify
-3. **ClassifierAgent → DevCoordinator**: Classification results (type, brain count, etc.)
-4. **DevCoordinator → PlannerAgent**: Goal and classification results
-5. **PlannerAgent → DevCoordinator**: Workflow plan
-6. **DevCoordinator → EvaluatorAgent**: Workflow plan
-7. **EvaluatorAgent → DevCoordinator**: Evaluation score and feedback
-8. **DevCoordinator → WorkflowExecutorAgent**: Workflow plan
-9. **WorkflowExecutorAgent → DevCoordinator**: Execution results
-10. **DevCoordinator → User**: Final results
+### PlannerAgent
 
-If a missing capability is identified:
+- Interprets user goals and requirements
+- Breaks down complex tasks into smaller, manageable steps
+- Identifies which agents or tools are needed for each step
+- Creates a structured workflow plan with proper sequencing
+- Identifies gaps where new components might be needed
 
-1. **PlannerAgent → DevCoordinator**: Missing capability notification
-2. **DevCoordinator → AutoAgentComposer**: Capability specification
-3. **AutoAgentComposer → DevCoordinator**: New agent metadata
-4. **DevCoordinator → PlannerAgent**: Updated agent registry information
+### EvaluatorAgent
 
-## Implementation
+- Reviews workflow plans for quality, efficiency, and correctness
+- Scores plans based on predefined criteria
+- Provides feedback and suggestions for improvement
+- Validates that plans will meet the user's requirements
+- May also evaluate generated code or components
 
-The AutoDevTeam is implemented as:
+### WorkflowExecutorAgent
 
-1. **OrchestratorTeam**: A formal Team entity that encapsulates the DevCoordinator and core agents
-2. **DevCoordinatorAgent**: The central Agent that coordinates the workflow using Agent Squad
-3. **Core Agents**: Individual specialized agents that perform specific roles
+- Executes workflow plans step by step
+- Manages data flow between steps
+- Handles errors and exceptions during execution
+- Tracks progress and provides status updates
+- Collects and formats the final output
 
-### DevCoordinator Implementation
+### AutoAgentComposer (Agno)
 
-The DevCoordinator is implemented as a SupervisorAgent from the Agent Squad framework:
+- Generates new agents or tools based on specifications
+- Analyzes requirements for new components
+- Creates code that follows system conventions and best practices
+- Registers new components in the system
+- Enables the team to extend its capabilities dynamically
 
-```python
-def run(self, request: Dict[str, Any]) -> Dict[str, Any]:
-    """Process a user request by orchestrating the appropriate agents."""
-    # Extract request details
-    goal = request.get("goal", "")
-    code = request.get("code")
-    
-    # Prepare the input for the supervisor
-    input_text = f"Goal: {goal}"
-    if code:
-        input_text += f"\nCode: {code}"
-    
-    # Run the supervisor
-    result = self.supervisor.process_request(
-        input_text=input_text,
-        additional_params={"options": request.get("options", {})}
-    )
-    
-    return {
-        "success": True,
-        "result": result.get("text", ""),
-        "context": result.get("context", {})
-    }
-```
+## Collaboration Process
 
-This implementation uses Agent Squad's SupervisorAgent to coordinate the core agents, providing a more flexible and extensible orchestration mechanism.
+The AutoDevTeam follows this general collaboration process:
 
-## Usage
+1. **Request Intake**: The SupervisorAgent receives a user request
+2. **Analysis**: 
+   - If code is provided, the ClassifierAgent analyzes it
+   - If a goal is provided, the PlannerAgent creates a plan
+3. **Quality Check**: The EvaluatorAgent reviews the plan
+4. **Capability Assessment**: The team checks if all required components exist
+5. **Component Generation**: If needed, Agno creates new components
+6. **Execution**: The WorkflowExecutorAgent carries out the plan
+7. **Delivery**: The final result is returned to the user
 
-The AutoDevTeam can be invoked via the CLI:
+## Example Scenario
 
-```bash
-tdev orchestrate "Build a service that summarizes documents"
-```
+For a request like "Create an API that fetches weather data and returns it as JSON":
 
-Or programmatically:
+1. **SupervisorAgent** receives the request and identifies it as a goal
+2. **PlannerAgent** creates a plan with steps:
+   - Fetch weather data from a service
+   - Process the data into the required format
+   - Create an API endpoint to serve the data
+3. **EvaluatorAgent** reviews and approves the plan
+4. The team discovers it needs a WeatherDataFetcherAgent that doesn't exist
+5. **Agno** generates the missing WeatherDataFetcherAgent
+6. **WorkflowExecutorAgent** executes the plan:
+   - The new WeatherDataFetcherAgent gets weather data
+   - A DataProcessorAgent formats it as JSON
+   - An APIGeneratorAgent creates the endpoint
+7. **SupervisorAgent** returns the completed API to the user
 
-```python
-from tdev.core.registry import get_registry
+## Phase 3 Enhancements
 
-registry = get_registry()
-coordinator = registry.get_instance("DevCoordinatorAgent")
-result = coordinator.run({"goal": "Build a service that summarizes documents"})
-```
+In Phase 3 of T-Developer, the AutoDevTeam has been enhanced with:
 
-## Future Extensions
+1. **Improved Coordination**: Better communication between agents
+2. **Dynamic Team Assembly**: More flexible team composition based on needs
+3. **Advanced Planning**: More sophisticated planning capabilities
+4. **Parallel Execution**: Ability to run multiple agents simultaneously
+5. **Feedback Integration**: Better incorporation of evaluation results
 
-In future iterations, the AutoDevTeam will be enhanced with:
-
-1. **Parallel Execution**: Running independent steps concurrently
-2. **Feedback Loops**: Incorporating user feedback into the workflow
-3. **Learning**: Improving planning and evaluation based on past executions
-4. **Advanced Composition**: Creating more complex workflows with branching and conditions
+These enhancements enable the AutoDevTeam to handle more complex development tasks with greater efficiency and quality.

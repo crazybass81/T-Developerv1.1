@@ -1,161 +1,66 @@
-# T-Developer Architecture
-
-This document describes the architecture of the T-Developer system, a meta-agent orchestration framework for building SaaS applications by composing Tools, Agents, and Teams.
+# T-Developer v1.1 Architecture
 
 ## System Overview
 
-T-Developer is designed as a meta-agent system where specialized agents work together under the coordination of an orchestrator to fulfill complex tasks. The system classifies components based on their decision-making complexity (brain count) and provides mechanisms for composing these components into workflows.
+T-Developer v1.1 is a **meta-agent orchestration framework** for automating software development tasks and composing SaaS applications from reusable components. The system enables complex goals to be achieved by a coordinated "squad" of specialized AI agents, automating the workflow from understanding a request to delivering a functional deployed service.
 
-### Core Components
+## Core Components
 
-- **Tools**: Pure functional units with no decision logic (0 brains)
-- **Agents**: Components with a single decision-making point (1 brain)
-- **Teams**: Collaborative structures composed of multiple agents (2+ brains)
-- **MetaAgent (Orchestrator)**: The central coordinator that manages the flow between other agents
-- **AutoAgentComposer (Agno)**: The system that generates new agents and tools based on specifications
+### Hierarchical Component Model
 
-### Agent Squad Orchestration
+All building blocks are classified as:
+- **Tools**: No decision logic ("0 brains")
+- **Agents**: Single decision point ("1 brain")
+- **Teams**: Multi-agent assemblies ("2+ brains")
 
-The heart of T-Developer is the Agent Squad orchestration pattern, where specialized agents work together in a coordinated sequence:
+### Agent Squad Orchestrator (MetaAgent)
 
-1. **SupervisorAgent (DevCoordinator)** serves as the central coordinator that manages the flow between other agents
-2. **ClassifierAgent** analyzes code to determine its type (Tool/Agent/Team)
-3. **PlannerAgent** breaks down goals into steps and selects appropriate agents or teams
-4. **EvaluatorAgent** scores workflows for quality and efficiency
-5. **WorkflowExecutorAgent** runs the composed workflows step by step
-6. **AutoAgentComposer (Agno)** generates new agents and tools when needed
+The central coordinator of the system, implemented as a MetaAgent (also called **DevCoordinator** or SupervisorAgent). It controls the flow of tasks and information among specialized agents:
 
-This orchestration is encapsulated in the **OrchestratorTeam**, which uses the DevCoordinator to coordinate these core agents to fulfill a user request. The orchestration allows T-Developer to dynamically assemble solutions from reusable components and even generate new components on demand.
+- Initiates and manages end-to-end workflows for user requests
+- Delegates tasks to core agents and collects their outputs
+- Makes high-level decisions based on agent outputs
+- Handles exceptions and control flow
+- Coordinates parallelism or team execution when applicable
 
-T-Developer integrates the AWS Agent Squad framework to provide a more flexible and extensible orchestration mechanism, allowing parallel agent execution and intelligent routing, which prepares the system for more complex scenarios and future growth.
+### Core Agents
 
-## System Architecture
+1. **ClassifierAgent**: Determines what kind of component an input is
+2. **PlannerAgent**: Devises a plan (workflow) to achieve the goal
+3. **EvaluatorAgent**: Reviews plan quality and provides feedback
+4. **WorkflowExecutorAgent**: Carries out the plan step by step
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Agent Code     │     │    Workflow     │     │  Configuration  │
-│  (Python Files) │     │  Definition     │     │  (Parameters)   │
-└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
-         │                       │                       │
-         └───────────┬───────────┴───────────┬───────────┘
-                     │                       │
-           ┌─────────▼───────────┐  ┌────────▼────────┐
-           │  CLI Commands       │  │  AgentRegistry  │
-           │                     │  │   (JSON)        │
-           └─────────┬───────────┘  └────────┬────────┘
-                     │                       │
-                     └───────────┬───────────┘
-                                 │
-                     ┌───────────▼───────────┐
-                     │  WorkflowExecutor     │
-                     └───────────┬───────────┘
-                                 │
-                     ┌───────────▼───────────┐
-                     │  Execution Results    │
-                     └─────────────────────┘
-```
+### Agno (AutoAgentComposer)
 
-### Key Components
+The agent generation subsystem that automatically creates new agents or tools when existing components lack a capability for a given task. Key functions:
 
-#### 1. AgentRegistry
+- Takes specifications for desired capabilities
+- Analyzes requirements and plans implementation
+- Generates code and metadata for new components
+- Registers new components in the system
 
-The AgentRegistry is the central directory of all available components. It maintains metadata about each agent, tool, and team, and provides methods to retrieve and instantiate them. The registry is stored as a JSON file in the `.tdev` directory.
+### AWS Bedrock Agent Core
 
-#### 2. CLI Interface
+The underlying AI and agent execution framework providing:
+- Foundation models for language understanding and generation
+- Agent Core SDK for easy integration with AWS services
+- Decision logic framework for agent behavior
 
-The command-line interface provides the primary way to interact with T-Developer. It includes commands for:
-- Initializing new agents and tools
-- Classifying components
-- Registering components in the registry
-- Composing workflows
-- Running workflows
-- Testing agents
+### User Interface Integrations
 
-#### 3. Workflow System
+- **CLI**: Command-line interface for direct control
+- **Web UI**: Visual interface for interaction and monitoring
+- **Future IDE Plugins**: Integration with development environments
 
-Workflows define sequences of steps, each referencing an agent to execute. The WorkflowExecutorAgent loads these definitions and runs each step in order, passing data between steps as needed.
+## Data Flow and Integration
 
-#### 4. Core Agents
+T-Developer integrates with development workflows and cloud infrastructure:
+- Runs locally via CLI for development
+- Deploys services to AWS (Lambda, ECS) for production
+- Hooks into CI/CD pipelines for automated testing and deployment
 
-- **SupervisorAgent (DevCoordinator)**: The central orchestrator that coordinates other agents using Agent Squad
-- **ClassifierAgent**: Analyzes code to determine its type
-- **PlannerAgent**: Plans workflows by selecting and ordering agents
-- **EvaluatorAgent**: Evaluates workflows for quality and efficiency
-- **WorkflowExecutorAgent**: Executes workflows step by step
-- **TeamExecutorAgent**: Executes teams and their member agents
-- **AgentTesterAgent**: Tests agents with sample inputs
-- **AutoAgentComposer**: Generates new agents and tools based on specifications
+All agents and tools are registered in a central **AgentRegistry**, enabling reuse in future workflows. The system is extensible – new components can be added manually or via generation.
 
-#### 5. Core Teams
+## Current Status
 
-- **OrchestratorTeam**: Coordinates the core agents using the DevCoordinator (Agent Squad)
-- **DoubleEchoTeam**: A simple example team that calls EchoAgent twice in sequence
-
-## Data Flow
-
-1. **Component Registration**:
-   - Agents and tools are defined in Python files or generated by Agno
-   - They are registered in the AgentRegistry with metadata
-   - The registry serves as the central lookup for all components
-
-2. **Orchestration**:
-   - The user submits a goal or code to the MetaAgent
-   - If code is provided, the ClassifierAgent analyzes it
-   - The PlannerAgent generates a workflow plan
-   - The EvaluatorAgent assesses the plan's quality
-   - If needed, the plan is refined based on feedback
-   - The WorkflowExecutorAgent runs the workflow
-   - If a capability is missing, the AutoAgentComposer generates a new agent
-
-3. **Workflow Composition**:
-   - The user defines a goal or requirement
-   - The PlannerAgent selects appropriate agents for each step
-   - A workflow definition is created and stored
-
-4. **Workflow Execution**:
-   - The WorkflowExecutorAgent loads the workflow definition
-   - It resolves each agent reference through the registry
-   - It executes each step in sequence, passing data between steps
-   - The final output is returned to the user
-
-## Deployment Context
-
-T-Developer is designed to run on EC2 instances without containers. The system uses local file storage for the registry and workflow definitions, making it simple to deploy and use.
-
-### File Structure
-
-```
-.tdev/                  # Runtime data directory
-  ├── registry.json     # Component registry
-  ├── workflows/        # Workflow definitions
-  └── instances/        # Service instance metadata
-
-tdev/                   # Python package
-  ├── core/             # Core framework
-  ├── agents/           # Agent implementations
-  ├── tools/            # Tool implementations
-  ├── teams/            # Team implementations
-  └── workflows/        # Workflow utilities
-```
-
-## Extensibility
-
-T-Developer is designed to be easily extended with new components:
-
-1. **Generating Components**: Use Agno to automatically generate new agents and tools based on specifications
-2. **Adding Agents Manually**: Create a new Python class inheriting from `Agent` and implement the `run` method
-3. **Adding Tools Manually**: Create a function with the `@tool` decorator or a class inheriting from `Tool`
-4. **Adding Teams**: Create a new Python class inheriting from `Team`, add member agents, and implement the coordination logic
-5. **Registering Components**: Use the CLI to register new components in the registry
-
-The addition of Agno in Phase 3 makes the system even more extensible by enabling automatic generation of new components on demand. This allows T-Developer to grow its capabilities over time and adapt to new requirements without manual coding.
-
-## Future Directions
-
-Future enhancements to the architecture may include:
-
-- Cloud storage for the registry and workflows
-- Distributed execution of workflows
-- More sophisticated planning and evaluation algorithms
-- Integration with CI/CD pipelines
-- Web interface for workflow visualization and management
+T-Developer v1.1 is currently in Phase 3 development, focusing on team composition and orchestration capabilities.

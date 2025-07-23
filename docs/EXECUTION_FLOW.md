@@ -1,198 +1,144 @@
-# T-Developer Execution Flow
+# Execution Flow
 
-This document provides a detailed, step-by-step breakdown of the execution flow in T-Developer using the Agent Squad framework.
+This document details the end-to-end execution flow in the T-Developer system, from user request to final output.
 
 ## Overview
 
-The execution flow in T-Developer follows a structured sequence from user input to result, coordinated by the Agent Squad orchestrator (DevCoordinator). This document describes each step in detail.
+The execution flow in T-Developer follows these general stages:
 
-## Execution Sequence
+1. **Request Submission**: User submits a request via CLI, UI, or API
+2. **Request Processing**: The Orchestrator analyzes and processes the request
+3. **Planning**: The system creates a plan to fulfill the request
+4. **Execution**: The plan is executed step by step
+5. **Result Delivery**: The final output is returned to the user
 
-### 1. User Input
+## Detailed Flow
 
-A user invokes the CLI (or API) with a goal and optionally a code snippet or file path and options:
+### 1. Request Submission
 
-```bash
-tdev orchestrate "Create a function to calculate Fibonacci numbers" --code path/to/code.py
-```
+A request can be submitted in several ways:
 
-The CLI parses these inputs and prepares them for the orchestrator.
+- **CLI Command**: `tdev orchestrate "Create a data processing pipeline"`
+- **Web UI**: Entering a request in the Agent UI Launcher
+- **API Call**: Sending a POST request to the orchestration endpoint
 
-### 2. Agent Squad Orchestrator Activation
+The request typically includes:
+- A goal or objective in natural language
+- Optional code or context
+- Optional constraints or parameters
 
-The input is passed to the Agent Squad orchestrator (the SupervisorAgent/DevCoordinator). The orchestrator is responsible for coordinating the entire process.
+### 2. Request Processing
 
-If a code file is included, the orchestrator first utilizes the ClassifierAgent to determine what the file represents (tool/agent/team). This classification is done automatically by the orchestrator's logic.
+When the Orchestrator receives a request:
 
-```python
-# Inside DevCoordinatorAgent
-if code:
-    classifier = registry.get_instance("ClassifierAgent")
-    classification_result = classifier.run(code)
-```
+1. **Request Parsing**: The request is parsed to extract the goal, code, or other parameters
+2. **Context Loading**: Any relevant context (project settings, available components) is loaded
+3. **Request Classification**: The Orchestrator determines if the request contains code or a goal
+   - If code is provided, it's sent to the ClassifierAgent
+   - If a goal is provided, it proceeds to planning
 
 ### 3. Planning
 
-The orchestrator (via the lead agent or coordinator logic) invokes the PlannerAgent with the user's goal and classification result (if any):
+For goal-based requests, the planning phase involves:
 
-```python
-planner = registry.get_instance("PlannerAgent")
-workflow_plan = planner.run({
-    "goal": goal,
-    "classification": classification_result
-})
-```
+1. **Goal Analysis**: The PlannerAgent analyzes the goal to understand requirements
+2. **Component Selection**: The Planner identifies which agents or tools can fulfill parts of the goal
+3. **Workflow Creation**: The Planner creates a workflow plan with specific steps
+4. **Plan Evaluation**: The EvaluatorAgent reviews the plan for quality and feasibility
+5. **Plan Refinement**: If the evaluation score is low, the plan may be refined
 
-The PlannerAgent returns a proposed **workflow plan** in the form of a JSON with a list of steps:
+If the plan requires components that don't exist:
+1. **Gap Identification**: The Planner identifies missing capabilities
+2. **Component Generation**: Agno is invoked to generate new agents or tools
+3. **Registration**: New components are registered in the system
+4. **Plan Update**: The plan is updated to include the new components
 
-```json
-{
-  "id": "fibonacci-function-v1",
-  "steps": [
-    {
-      "id": "analyze",
-      "agent": "CodeAnalyzerAgent",
-      "input_from": "code",
-      "output_to": "analysis"
-    },
-    {
-      "id": "implement",
-      "agent": "CodeGeneratorAgent",
-      "input_from": "analysis",
-      "output_to": "implementation"
-    }
-  ]
-}
-```
+### 4. Execution
 
-This plan outlines how to fulfill the goal, typically listing which agents or tools to call in sequence.
+Once a plan is approved:
 
-### 4. Evaluation & Refinement
+1. **Workflow Initialization**: The WorkflowExecutorAgent prepares to execute the plan
+2. **Step Execution**: Each step in the workflow is executed in sequence
+   - The appropriate agent or tool is invoked with the required inputs
+   - Outputs from each step may be used as inputs for subsequent steps
+3. **Progress Tracking**: The execution progress is tracked and may be reported to the user
+4. **Error Handling**: If a step fails, the system may attempt recovery or report the error
 
-The orchestrator next calls the EvaluatorAgent to assess the proposed plan:
+### 5. Result Delivery
 
-```python
-evaluator = registry.get_instance("EvaluatorAgent")
-evaluation = evaluator.run(workflow_plan)
-```
+After execution completes:
 
-The EvaluatorAgent produces a score and feedback:
+1. **Result Compilation**: The final output is compiled from the workflow execution
+2. **Formatting**: The result is formatted according to the request requirements
+3. **Delivery**: The result is returned to the user via the original interface (CLI, UI, API)
+4. **Logging**: The execution details are logged for future reference
 
-```json
-{
-  "score": 0.85,
-  "feedback": [
-    "The plan covers the basic requirements",
-    "Consider adding a testing step"
-  ]
-}
-```
+## Example Flow
 
-If the plan is suboptimal (score below threshold), the orchestrator will trigger a refinement cycle:
+For a request like `tdev orchestrate "Create a weather dashboard for Seoul"`:
 
-```python
-if evaluation["score"] < 0.7:  # Threshold for acceptance
-    # Request refinement from the planner
-    planning_input["feedback"] = evaluation["feedback"]
-    workflow_plan = planner.run(planning_input)
-```
+1. **Request Submission**: User submits the request via CLI
+2. **Request Processing**: The Orchestrator identifies this as a goal-based request
+3. **Planning**:
+   - PlannerAgent analyzes the goal and determines it needs:
+     - A weather data fetching component
+     - A data processing component
+     - A visualization component
+   - It creates a workflow with these steps
+   - EvaluatorAgent reviews and approves the plan
+4. **Execution**:
+   - WorkflowExecutorAgent runs the workflow:
+     - WeatherDataAgent fetches Seoul weather data
+     - DataProcessorAgent formats the data
+     - DashboardGeneratorAgent creates the visualization
+5. **Result Delivery**:
+   - The dashboard URL or file is returned to the user
+   - Execution logs are stored
 
-This loop (Planner -> Evaluator) may repeat until an acceptable plan is obtained or a maximum iteration is reached.
+## Advanced Flow Patterns
 
-### 5. Execution
+### Parallel Execution
 
-Once the plan is finalized, the orchestrator invokes the WorkflowExecutorAgent to carry out the plan steps:
-
-```python
-executor = registry.get_instance("WorkflowExecutorAgent")
-execution_result = executor.run(workflow_plan)
-```
-
-The WorkflowExecutorAgent executes each step in the plan in order, utilizing either direct agent calls or Agent Squad's messaging. For example:
-
-```python
-# Inside WorkflowExecutorAgent
-for step in workflow_plan["steps"]:
-    agent_name = step["agent"]
-    agent = registry.get_instance(agent_name)
-    input_data = context[step["input_from"]]
-    result = agent.run(input_data)
-    context[step["output_to"]] = result
-```
-
-If any step fails or produces new information, the executor handles it according to the plan's error handling instructions (for now, it typically continues or stops on error).
-
-### 6. Result Aggregation
-
-After execution, the final result (for example, a completed code artifact, or a summary of actions) is returned by the WorkflowExecutorAgent:
-
-```json
-{
-  "result": "def fibonacci(n):\n    if n <= 1:\n        return n\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)",
-  "steps_executed": 2,
-  "execution_time": 1.5
-}
-```
-
-The orchestrator collects this and presents it as the outcome. If using SupervisorAgent with an LLM lead, the lead agent might formulate the final answer to the user based on all the context. Otherwise, the DevCoordinator simply outputs the WorkflowExecutor's result.
-
-The result is printed to the console by the CLI:
+For complex workflows, multiple steps may execute in parallel:
 
 ```
-Orchestration completed.
-Result: {
-  "result": "def fibonacci(n):\n    if n <= 1:\n        return n\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)",
-  "steps_executed": 2,
-  "execution_time": 1.5
-}
+Step A -----> Step C
+       \
+Step B -----> Step D
 ```
 
-### 7. Context Handling
+### Conditional Branching
 
-Agent Squad's context management system maintains conversation state for multi-turn interactions. While T-Developer doesn't currently support interactive conversations, the architecture is ready for iterative dialogues.
+Workflows may include conditional logic:
 
-Agent Squad can maintain:
-- **User-Supervisor memory**: Remembers the conversation history between the user and the supervisor
-- **Supervisor-Team memory**: Maintains context between the supervisor and its team members
-
-This enables more complex, stateful interactions in future versions.
-
-## Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI
-    participant DevCoordinator
-    participant ClassifierAgent
-    participant PlannerAgent
-    participant EvaluatorAgent
-    participant WorkflowExecutorAgent
-    
-    User->>CLI: tdev orchestrate "goal" --code file.py
-    CLI->>DevCoordinator: run(goal, code)
-    
-    alt Code provided
-        DevCoordinator->>ClassifierAgent: run(code)
-        ClassifierAgent-->>DevCoordinator: classification result
-    end
-    
-    DevCoordinator->>PlannerAgent: run(goal, classification)
-    PlannerAgent-->>DevCoordinator: workflow plan
-    
-    DevCoordinator->>EvaluatorAgent: run(workflow plan)
-    EvaluatorAgent-->>DevCoordinator: evaluation result
-    
-    alt Score below threshold
-        DevCoordinator->>PlannerAgent: run(goal, feedback)
-        PlannerAgent-->>DevCoordinator: refined workflow plan
-    end
-    
-    DevCoordinator->>WorkflowExecutorAgent: run(workflow plan)
-    WorkflowExecutorAgent-->>DevCoordinator: execution result
-    
-    DevCoordinator-->>CLI: result
-    CLI-->>User: Display result
+```
+Step A ---[if condition]---> Step B
+       \
+        [else]------------> Step C
 ```
 
-This diagram illustrates the flow of a request through the system, showing how the DevCoordinator orchestrates the core agents to fulfill the user's goal.
+### Feedback Loops
+
+Some workflows may include feedback loops for refinement:
+
+```
+Step A --> Step B --> Evaluation
+                         |
+                         v
+                     [if score < threshold]
+                         |
+                         v
+                      Refinement
+                         |
+                         v
+                      Step B (retry)
+```
+
+## Monitoring and Debugging
+
+Throughout the execution flow, the system provides monitoring and debugging capabilities:
+
+- **Logs**: Detailed logs of each step's execution
+- **Progress Updates**: Real-time updates on workflow progress
+- **Error Reports**: Detailed error information if steps fail
+- **Execution Traces**: Complete traces of the execution path

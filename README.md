@@ -1,8 +1,17 @@
 # T-Developer v1.1
 
-T-Developer is an agent orchestration system designed to build SaaS applications by composing Tools, Agents, and Teams. This repository contains the implementation of the T-Developer platform based on the architectural specifications.
+T-Developer v1.1 is an **agent orchestration platform** that can turn natural-language feature requests into working software without direct human coding. It automates the software development pipeline from requirements analysis through implementation, testing, and deployment.
 
-**Current Phase: Phase 3 (Team Composition and Orchestration)**
+**Current Phase: Phase 3 (Full Automation and Agent Generation)**
+
+## System Overview
+
+T-Developer enables complex goals to be achieved by a coordinated "squad" of specialized AI agents. When a user describes a new software feature in plain language, the platform:
+
+1. Automatically analyzes the request
+2. Breaks it down into sub-tasks
+3. Assembles or creates specialized AI agents for each task
+4. Generates, tests, deploys, and executes the code
 
 ## Core Components
 
@@ -10,13 +19,13 @@ T-Developer is an agent orchestration system designed to build SaaS applications
 - **Agents**: Components with a single decision-making point (1 brain)
 - **Teams**: Collaborative structures composed of multiple agents (2+ brains)
 
-## Features
+## Key Features
 
 - **Component Registry**: Central directory of all available agents, tools, and teams
-- **Workflow System**: Define and execute sequences of agent and team steps
-- **CLI Interface**: Command-line tools for creating and managing components
-- **Testing Framework**: Test agents, tools, and teams with sample inputs
-- **Agno (AutoAgentComposer)**: Automatically generate new agents and tools based on specifications
+- **Workflow System**: Define and execute sequences of steps using agents and teams
+- **CLI/IDE Interface**: Command-line tools and IDE integrations for managing components
+- **Testing Framework**: Automated testing for agents, tools, and teams
+- **Agno (AutoAgentComposer)**: Automatically generate new agents or tools based on specifications
 - **Agent Squad Orchestrator**: Coordinate specialized agents to fulfill complex tasks
 
 ## Getting Started
@@ -55,36 +64,37 @@ tdev generate agent --name CustomAgent --goal "A custom agent that does somethin
 
 Comprehensive documentation is available in the `docs/` directory:
 
+### Project Information
 - [Architecture](docs/ARCHITECTURE.md) - System architecture and component interactions
-- [Agent Development Guide](docs/AGENTS.md) - How to create and register agents
-- [Tool Development Guide](docs/TOOLS.md) - How to create and register tools
-- [Team Development Guide](docs/TEAMS.md) - How to create and register teams
-- [Workflow Guide](docs/WORKFLOWS.md) - How to define and use workflows
-- [CLI Usage Guide](docs/CLI_USAGE.md) - Command-line interface reference
-- [Orchestrator](docs/ORCHESTRATOR.md) - How the Agent Squad orchestrator works
-- [Execution Flow](docs/EXECUTION_FLOW.md) - Detailed execution flow in the system
-- [AutoDevTeam Assembly](docs/AUTO_DEV_TEAM.md) - How core agents work together in Phase 3
+- [Roadmap](docs/ROADMAP.md) - Development phases and current progress
 - [Phase Transition](docs/PHASE_TRANSITION.md) - Summary of the transition from Phase 2 to Phase 3
 
-## Architecture
+### Development Guides
+- [Agent Development](docs/AGENTS.md) - How to create and register agents
+- [Tool Development](docs/TOOLS.md) - How to create and register tools
+- [Team Development](docs/TEAMS.md) - How to create and register teams
+- [Workflow Guide](docs/WORKFLOWS.md) - How to define and use workflows
 
-T-Developer uses the Agent Squad orchestration pattern, where specialized agents work together under the coordination of a SupervisorAgent to fulfill complex tasks:
+### System Components
+- [Orchestrator](docs/ORCHESTRATOR.md) - How the Agent Squad orchestrator works
+- [AutoDevTeam](docs/AUTO_DEV_TEAM.md) - How core agents work together in Phase 3
+- [Execution Flow](docs/EXECUTION_FLOW.md) - Detailed execution flow in the system
 
-1. **SupervisorAgent (DevCoordinator)** coordinates the flow between specialized agents
-2. **ClassifierAgent** analyzes code to determine its type (Tool/Agent/Team)
-3. **PlannerAgent** breaks down goals into steps and selects appropriate agents
-4. **EvaluatorAgent** scores workflows for quality and efficiency
-5. **WorkflowExecutorAgent** runs the composed workflows step by step
+### User Guides
+- [CLI Usage](docs/CLI_USAGE.md) - Command-line interface reference
 
-T-Developer integrates the AWS Agent Squad framework to provide a more flexible and extensible orchestration mechanism.
+## Core Agent Squad
 
-Components are classified based on their decision-making complexity (brain count):
+T-Developer uses the Agent Squad orchestration pattern, where specialized agents work together under the coordination of a SupervisorAgent:
 
-- **Tool**: Pure function (0 brains)
-- **Agent**: One decision point (1 brain)
-- **Team**: Multiple decisions + coordination (2+ brains)
+1. **SupervisorAgent (DevCoordinator)**: Coordinates the flow between specialized agents
+2. **ClassifierAgent**: Analyzes code to determine its type (Tool/Agent/Team)
+3. **PlannerAgent**: Breaks down goals into steps and selects appropriate agents
+4. **EvaluatorAgent**: Scores workflows for quality and efficiency
+5. **WorkflowExecutorAgent**: Runs the composed workflows step by step
+6. **AutoAgentComposer (Agno)**: Generates new agents and tools as needed
 
-## Development
+## Development Examples
 
 ### Creating a New Agent
 

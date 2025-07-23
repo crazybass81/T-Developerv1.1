@@ -82,14 +82,103 @@ class DevCoordinatorAgent(Agent):
         code = request.get("code")
         options = request.get("options", {})
         
-        # Prepare the input for the supervisor
-        input_text = f"Goal: {goal}"
+        # If code is provided, classify it first
         if code:
-            input_text += f"\nCode: {code}"
+            return self._handle_code_request(code, options)
         
-        additional_params = {"options": options}
+        # Otherwise, handle as a goal-based request
+        return self._handle_goal_request(goal, options)
+    
+    def _handle_code_request(self, code: str, options: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Handle a request with code to classify.
+        """
+        classifier = self.registry.get_instance("ClassifierAgent")
+        if not classifier:
+            return {"success": False, "error": "ClassifierAgent not found"}
         
-        # Run the supervisor asynchronously
+        # Classify the code
+        classification = classifier.run({"code": code})
+        
+        return {
+            "success": True,
+            "result": classification,
+            "type": "classification"
+        }
+    
+    def _handle_goal_request(self, goal: str, options: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Handle a goal-based request by planning and executing a workflow.
+        """
+        # Step 1: Plan a workflow
+        planner = self.registry.get_instance("PlannerAgent")
+        if not planner:
+            return {"success": False, "error": "PlannerAgent not found"}
+        
+        planning_result = planner.run(goal)
+        workflow = planning_result.get("workflow")
+        missing_capabilities = planning_result.get("missing_capabilities", [])
+        
+        # Step 2: Handle any missing capabilities
+        if missing_capabilities:
+            print(f"Found {len(missing_capabilities)} missing capabilities. Generating them...")
+            for capability in missing_capabilities:
+                generation_result = self.handle_missing_capability(capability)
+                if not generation_result.get("success", False):
+                    return {
+                        "success": False,
+                        "error": f"Failed to generate capability: {capability['name']}",
+                        "details": generation_result
+                    }
+            
+            # Re-plan with the new capabilities
+            planning_result = planner.run(goal)
+            workflow = planning_result.get("workflow")
+        
+        # Step 3: Evaluate the workflow
+        evaluator = self.registry.get_instance("EvaluatorAgent")
+        if not evaluator:
+            return {"success": False, "error": "EvaluatorAgent not found"}
+        
+        evaluation = evaluator.run(workflow)
+        
+        # Step 4: If evaluation score is too low, refine the plan
+        if evaluation.get("needs_improvement", False):
+            print(f"Workflow needs improvement. Score: {evaluation.get('score')}")
+            print(f"Suggestions: {evaluation.get('suggestions')}")
+            
+            # In a more advanced implementation, we would refine the plan here
+            # For now, we'll proceed with the original plan
+            pass
+        
+        # Step 5: Execute the workflow
+        executor = self.registry.get_instance("WorkflowExecutorAgent")
+        if not executor:
+            return {"success": False, "error": "WorkflowExecutorAgent not found"}
+        
+        # Prepare input data
+        input_data = options.get("input", {"input": goal})
+        
+        # Execute the workflow
+        execution_result = executor.run({
+            "workflow": workflow,
+            "input": input_data
+        })
+        
+        # Return the final result
+        return {
+            "success": True,
+            "result": execution_result.get("output"),
+            "workflow_id": workflow.get("id"),
+            "steps": execution_result.get("steps", []),
+            "evaluation": evaluation,
+            "type": "workflow_execution"
+        }
+        
+    def _run_with_supervisor(self, input_text: str, additional_params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Run the request through the Agent Squad supervisor.
+        """
         try:
             # Create an event loop if one doesn't exist
             try:
