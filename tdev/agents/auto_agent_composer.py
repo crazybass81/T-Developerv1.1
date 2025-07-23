@@ -328,11 +328,9 @@ Code:
             response = self.bedrock_client.invoke_model(
                 model_id=model_id,
                 prompt=prompt,
-                parameters={
-                    "maxTokens": 1500,
-                    "temperature": 0.4,
-                    "topP": 0.9
-                }
+                max_tokens=1500,
+                temperature=0.4,
+                top_p=0.9
             )
             
             # Extract the code from the response

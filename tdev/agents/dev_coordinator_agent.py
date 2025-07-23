@@ -43,9 +43,9 @@ class DevCoordinatorAgent(Agent):
             lead_agent = BedrockAgent(
                 AgentOptions(
                     name="LeadAgent",
-                    description="The lead agent that coordinates the team",
-                    model_id=model_id
-                )
+                    description="The lead agent that coordinates the team"
+                ),
+                model_id=model_id
             )
         else:
             # Use a mock Bedrock agent
@@ -280,11 +280,9 @@ Enhanced Specification:
             response = self.bedrock_client.invoke_model(
                 model_id=model_id,
                 prompt=prompt,
-                parameters={
-                    "maxTokens": 1000,
-                    "temperature": 0.4,
-                    "topP": 0.9
-                }
+                max_tokens=1000,
+                temperature=0.4,
+                top_p=0.9
             )
             
             # Extract the enhanced specification from the response
