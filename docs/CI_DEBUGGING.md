@@ -86,6 +86,31 @@ test_code = f\"\"\"...\"\"\"
 test_code = f'''...'''
 ```
 
+### Fix Template String Issues
+```bash
+# Run template string validation
+python scripts/test_templates.py
+
+# Common template string issues and fixes:
+
+# 1. Nested triple quotes - Use different quote styles for outer and inner strings
+# Bad:
+template = f"""class {name}:\n    """This is a docstring"""\n"""
+
+# Good:
+template = f'''class {name}:\n    """This is a docstring"""\n'''
+
+# 2. Escaping braces in f-strings when needed
+# Bad:
+template = f"""print({variable})"""  # When you want literal braces
+
+# Good:
+template = f"""print({{variable}})"""  # Double braces for literal braces
+
+# 3. Use triple single quotes for templates with docstrings
+template = f'''def function():\n    """Docstring"""\n    pass\n'''
+```
+
 ### Fix Pylint Configuration
 ```yaml
 # Remove deprecated rules
