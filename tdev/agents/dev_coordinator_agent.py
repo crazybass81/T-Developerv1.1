@@ -6,11 +6,14 @@ to fulfill user requests end-to-end, replacing the legacy MetaAgent.
 """
 from typing import Dict, Any, List, Optional
 import asyncio
+import os
+import json
 
 from tdev.core.agent import Agent
 from tdev.core.registry import get_registry
 from tdev.agent_squad.agents import Agent as SquadAgent, AgentOptions, SupervisorAgent, SupervisorAgentOptions, BedrockAgent
 from tdev.agent_squad.wrappers import SquadWrapperAgent
+from tdev.agent_core.bedrock_client import BedrockClient
 
 
 class DevCoordinatorAgent(Agent):
@@ -24,17 +27,34 @@ class DevCoordinatorAgent(Agent):
     def __init__(self):
         """Initialize the DevCoordinatorAgent."""
         self.registry = get_registry()
+        self.bedrock_client = None
+        try:
+            self.bedrock_client = BedrockClient()
+        except Exception as e:
+            print(f"Warning: Could not initialize Bedrock client: {e}")
         self.supervisor = self._create_supervisor()
     
     def _create_supervisor(self):
         """Create a SupervisorAgent with the core T-Developer agents."""
-        # Create a lead agent (in a real implementation, this would be a Bedrock LLM)
-        lead_agent = BedrockAgent(
-            AgentOptions(
-                name="LeadAgent",
-                description="The lead agent that coordinates the team"
+        # Create a lead agent using Bedrock if available
+        if self.bedrock_client:
+            # Use a real Bedrock agent
+            model_id = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-v2")
+            lead_agent = BedrockAgent(
+                AgentOptions(
+                    name="LeadAgent",
+                    description="The lead agent that coordinates the team",
+                    model_id=model_id
+                )
             )
-        )
+        else:
+            # Use a mock Bedrock agent
+            lead_agent = BedrockAgent(
+                AgentOptions(
+                    name="LeadAgent",
+                    description="The lead agent that coordinates the team"
+                )
+            )
         
         # Wrap the core T-Developer agents
         wrapped_agents = []
@@ -123,6 +143,11 @@ class DevCoordinatorAgent(Agent):
         if missing_capabilities:
             print(f"Found {len(missing_capabilities)} missing capabilities. Generating them...")
             for capability in missing_capabilities:
+                # Enhance the capability spec with more details using Bedrock if available
+                if self.bedrock_client:
+                    capability = self._enhance_capability_spec(capability, goal)
+                
+                # Generate the capability
                 generation_result = self.handle_missing_capability(capability)
                 if not generation_result.get("success", False):
                     return {
@@ -130,6 +155,7 @@ class DevCoordinatorAgent(Agent):
                         "error": f"Failed to generate capability: {capability['name']}",
                         "details": generation_result
                     }
+                print(f"Successfully generated capability: {capability['name']}")
             
             # Re-plan with the new capabilities
             planning_result = planner.run(goal)
@@ -207,6 +233,86 @@ class DevCoordinatorAgent(Agent):
                 "error": str(e)
             }
     
+    def _enhance_capability_spec(self, capability_spec: Dict[str, Any], goal: str) -> Dict[str, Any]:
+        """
+        Enhance a capability specification with more details using Bedrock.
+        
+        Args:
+            capability_spec: Basic specification of the required capability
+            goal: The overall goal that this capability will help achieve
+            
+        Returns:
+            Enhanced capability specification
+        """
+        if not self.bedrock_client:
+            return capability_spec
+        
+        try:
+            # Prepare the prompt for Bedrock
+            prompt = f"""You are an AI agent designer. Your task is to enhance a specification for a new AI agent.
+
+Overall Goal: {goal}
+
+Basic Agent Specification:
+- Type: {capability_spec.get('type', 'agent')}
+- Name: {capability_spec.get('name', 'Unknown')}
+- Description: {capability_spec.get('description', 'No description')}
+
+Please enhance this specification by providing:
+1. A more detailed description of what this agent should do
+2. What inputs the agent should accept
+3. What outputs the agent should produce
+4. Any tools or libraries the agent might need
+5. Implementation hints for the agent's logic
+
+Format your response as a JSON object with the following fields:
+- description: Detailed description
+- input: Description of input data
+- output: Description of output data
+- tools: Array of tool names or libraries
+- implementation_hints: Hints for implementation
+
+Enhanced Specification:
+"""
+            
+            # Call Bedrock to enhance the specification
+            model_id = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-v2")
+            response = self.bedrock_client.invoke_model(
+                model_id=model_id,
+                prompt=prompt,
+                parameters={
+                    "maxTokens": 1000,
+                    "temperature": 0.4,
+                    "topP": 0.9
+                }
+            )
+            
+            # Extract the enhanced specification from the response
+            if "anthropic" in model_id.lower():
+                completion = response.get("completion", "")
+            else:
+                completion = response.get("outputText", "")
+            
+            # Try to parse the JSON response
+            try:
+                # Find JSON object in the response
+                json_start = completion.find('{')
+                json_end = completion.rfind('}') + 1
+                if json_start >= 0 and json_end > json_start:
+                    json_str = completion[json_start:json_end]
+                    enhanced_spec = json.loads(json_str)
+                    
+                    # Merge the enhanced spec with the original spec
+                    for key, value in enhanced_spec.items():
+                        if key not in capability_spec or not capability_spec[key]:
+                            capability_spec[key] = value
+            except Exception as e:
+                print(f"Error parsing enhanced specification: {e}")
+        except Exception as e:
+            print(f"Error enhancing capability specification: {e}")
+        
+        return capability_spec
+    
     def handle_missing_capability(self, capability_spec: Dict[str, Any]) -> Dict[str, Any]:
         """
         Handle a missing capability by generating a new agent.
@@ -226,5 +332,15 @@ class DevCoordinatorAgent(Agent):
         
         # Generate the new agent
         result = composer.run(capability_spec)
+        
+        # If generation was successful, test the new agent
+        if result.get("success", False):
+            agent_name = result.get("metadata", {}).get("name")
+            if agent_name:
+                tester = self.registry.get_instance("AgentTesterAgent")
+                if tester:
+                    print(f"Testing newly generated agent: {agent_name}")
+                    test_result = tester.run(agent_name)
+                    result["test_result"] = test_result
         
         return result

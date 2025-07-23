@@ -1,17 +1,29 @@
 from typing import Dict, Any, List, Optional
 import re
 import json
+import os
 from tdev.core.agent import Agent
 from tdev.core.workflow import Workflow
 from tdev.core.registry import get_registry
+from tdev.agent_core.bedrock_client import BedrockClient
 
 class PlannerAgent(Agent):
     """
     Agent responsible for planning workflows.
     
     The PlannerAgent takes a goal and breaks it into a sequence of steps,
-    selecting appropriate agents for each step.
+    selecting appropriate agents for each step. It uses AWS Bedrock to generate
+    intelligent plans based on natural language goals.
     """
+    
+    def __init__(self):
+        """Initialize the PlannerAgent."""
+        super().__init__()
+        self.bedrock_client = None
+        try:
+            self.bedrock_client = BedrockClient()
+        except Exception as e:
+            print(f"Warning: Could not initialize Bedrock client: {e}")
     
     def run(self, goal: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -31,8 +43,12 @@ class PlannerAgent(Agent):
         available_agents = registry.get_by_type("agent")
         available_tools = registry.get_by_type("tool")
         
-        # Parse the goal to identify key tasks and required capabilities
-        workflow_steps = self._analyze_goal(goal, available_agents, available_tools)
+        # Use Bedrock for intelligent planning if available
+        if self.bedrock_client:
+            workflow_steps = self._plan_with_bedrock(goal, available_agents, available_tools)
+        else:
+            # Fallback to rule-based planning
+            workflow_steps = self._analyze_goal(goal, available_agents, available_tools)
         
         # Create workflow with the identified steps
         workflow = Workflow(
@@ -53,12 +69,86 @@ class PlannerAgent(Agent):
         
         return result
     
+    def _plan_with_bedrock(self, goal: str, available_agents: List[Dict], available_tools: List[Dict]) -> List[Dict]:
+        """
+        Use AWS Bedrock to generate an intelligent plan for the goal.
+        
+        Args:
+            goal: The goal to achieve
+            available_agents: List of available agents
+            available_tools: List of available tools
+            
+        Returns:
+            List of workflow steps
+        """
+        # Prepare the prompt for Bedrock
+        agent_names = [agent["name"] for agent in available_agents]
+        tool_names = [tool["name"] for tool in available_tools]
+        
+        prompt = f"""You are an AI workflow planner. Your task is to create a workflow plan to achieve a goal.
+
+Goal: {goal}
+
+Available agents:
+{', '.join(agent_names)}
+
+Available tools:
+{', '.join(tool_names)}
+
+Create a workflow plan with 2-5 steps to achieve the goal. Each step should use one of the available agents.
+For each step, specify:
+1. The agent to use
+2. How the input for this step relates to previous steps' outputs
+
+Format your response as a JSON array of steps, where each step is an object with 'agent' and optionally 'input' fields.
+Example: [{{'agent': 'AgentName', 'input': {{'data': '${{0.result}}'}}}}
+
+Workflow plan:
+"""
+        
+        try:
+            # Call Bedrock to generate the plan
+            model_id = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-v2")
+            response = self.bedrock_client.invoke_model(
+                model_id=model_id,
+                prompt=prompt,
+                parameters={
+                    "maxTokens": 1000,
+                    "temperature": 0.2,
+                    "topP": 0.9
+                }
+            )
+            
+            # Extract the workflow steps from the response
+            if "anthropic" in model_id.lower():
+                completion = response.get("completion", "")
+            else:
+                completion = response.get("outputText", "")
+            
+            # Try to parse the JSON response
+            try:
+                # Find JSON array in the response
+                json_start = completion.find('[')
+                json_end = completion.rfind(']') + 1
+                if json_start >= 0 and json_end > json_start:
+                    json_str = completion[json_start:json_end]
+                    steps = json.loads(json_str)
+                    return steps
+            except Exception as e:
+                print(f"Error parsing Bedrock response: {e}")
+                # Fall back to rule-based planning
+        except Exception as e:
+            print(f"Error calling Bedrock: {e}")
+        
+        # Fallback to rule-based planning if Bedrock fails
+        return self._analyze_goal(goal, available_agents, available_tools)
+    
     def _analyze_goal(self, goal: str, available_agents: List[Dict], available_tools: List[Dict]) -> List[Dict]:
         """
-        Analyze the goal and break it down into steps.
+        Analyze the goal and break it down into steps using rule-based matching.
         
-        This is a simplified implementation that uses keyword matching.
-        In a production system, this would use an LLM to analyze the goal.
+        This is a simplified implementation that uses keyword matching as a fallback
+        when the Bedrock LLM is not available.
         """
         steps = []
         

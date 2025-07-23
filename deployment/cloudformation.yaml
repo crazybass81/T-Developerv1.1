@@ -1,0 +1,147 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'T-Developer v1.1 Infrastructure'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment for deployment
+
+Resources:
+  # DynamoDB table for agent registry
+  AgentRegistryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub t-developer-registry-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: name
+          KeyType: HASH
+
+  # DynamoDB table for feedback
+  FeedbackTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub t-developer-feedback-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: agent_name
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: agent_name
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+
+  # S3 bucket for agent code and artifacts
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub t-developer-artifacts-${Environment}-${AWS::AccountId}
+      VersioningConfiguration:
+        Status: Enabled
+
+  # IAM role for Lambda functions
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub t-developer-lambda-role-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt AgentRegistryTable.Arn
+                  - !GetAtt FeedbackTable.Arn
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt ArtifactBucket.Arn
+                  - !Sub ${ArtifactBucket.Arn}/*
+        - PolicyName: BedrockAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock-agent:*
+                Resource: '*'
+
+  # API Gateway for the API server
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub t-developer-api-${Environment}
+      Description: API for T-Developer v1.1
+
+  # CloudWatch Log Group for API Gateway
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/${ApiGateway}
+      RetentionInDays: 30
+
+Outputs:
+  AgentRegistryTableName:
+    Description: Name of the DynamoDB table for agent registry
+    Value: !Ref AgentRegistryTable
+    Export:
+      Name: !Sub ${AWS::StackName}-AgentRegistryTableName
+
+  FeedbackTableName:
+    Description: Name of the DynamoDB table for feedback
+    Value: !Ref FeedbackTable
+    Export:
+      Name: !Sub ${AWS::StackName}-FeedbackTableName
+
+  ArtifactBucketName:
+    Description: Name of the S3 bucket for artifacts
+    Value: !Ref ArtifactBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-ArtifactBucketName
+
+  LambdaExecutionRoleArn:
+    Description: ARN of the IAM role for Lambda functions
+    Value: !GetAtt LambdaExecutionRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaExecutionRoleArn
+
+  ApiGatewayUrl:
+    Description: URL of the API Gateway
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiGatewayUrl

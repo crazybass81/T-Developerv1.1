@@ -43,6 +43,14 @@ jobs:
     - name: Update registry with deployment info
       run: |
         python scripts/update_registry_with_deployment_info.py
-    - name: Notify deployment status
+    - name: Notify Slack on successful deployment
       run: |
-        echo "Deployment completed successfully"
+        python scripts/notify_slack.py --message "🚀 Deployment completed successfully" --status "success"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - name: Notify Slack on deployment failure
+      if: failure()
+      run: |
+        python scripts/notify_slack.py --message "❌ Deployment failed" --status "error"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -4,14 +4,25 @@ import json
 from tdev.core.agent import Agent
 from tdev.core.workflow import Workflow, load_workflow
 from tdev.core.registry import get_registry
+from tdev.agent_core.bedrock_client import BedrockClient
 
 class EvaluatorAgent(Agent):
     """
     Agent responsible for evaluating workflows and agents.
     
     The EvaluatorAgent scores workflows based on quality, efficiency,
-    and other metrics to ensure they meet standards.
+    and other metrics to ensure they meet standards. It uses AWS Bedrock
+    for intelligent evaluation when available.
     """
+    
+    def __init__(self):
+        """Initialize the EvaluatorAgent."""
+        super().__init__()
+        self.bedrock_client = None
+        try:
+            self.bedrock_client = BedrockClient()
+        except Exception as e:
+            print(f"Warning: Could not initialize Bedrock client: {e}")
     
     def run(self, workflow_data: Union[str, Dict], test_results: Optional[Dict] = None) -> Dict[str, Any]:
         """
@@ -38,8 +49,12 @@ class EvaluatorAgent(Agent):
             print("EvaluatorAgent: Evaluating workflow from dictionary")
             workflow = workflow_data
         
-        # Perform evaluation
-        evaluation = self._evaluate_workflow(workflow, test_results)
+        # Perform evaluation using Bedrock if available
+        if self.bedrock_client and isinstance(workflow, dict):
+            evaluation = self._evaluate_with_bedrock(workflow, test_results)
+        else:
+            # Fall back to rule-based evaluation
+            evaluation = self._evaluate_workflow(workflow, test_results)
         
         # Determine if the workflow needs improvement
         needs_improvement = evaluation["score"] < 70 or len(evaluation["suggestions"]) > 0
@@ -48,6 +63,98 @@ class EvaluatorAgent(Agent):
         evaluation["needs_improvement"] = needs_improvement
         
         return evaluation
+    
+    def _evaluate_with_bedrock(self, workflow: Dict, test_results: Optional[Dict] = None) -> Dict[str, Any]:
+        """
+        Evaluate a workflow using AWS Bedrock for intelligent analysis.
+        
+        Args:
+            workflow: The workflow to evaluate
+            test_results: Optional test results to incorporate
+            
+        Returns:
+            Evaluation results
+        """
+        # Prepare the prompt for Bedrock
+        workflow_json = json.dumps(workflow, indent=2)
+        test_results_str = "No test results available"
+        if test_results:
+            test_results_str = json.dumps(test_results, indent=2)
+        
+        prompt = f"""You are an AI workflow evaluator. Your task is to evaluate a workflow plan and provide a quality score and suggestions for improvement.
+
+Workflow:
+```json
+{workflow_json}
+```
+
+Test Results:
+```json
+{test_results_str}
+```
+
+Evaluate this workflow based on the following criteria:
+1. Structural completeness: Does the workflow have all necessary steps?
+2. Agent suitability: Are the selected agents appropriate for their tasks?
+3. Error resilience: Does the workflow handle potential errors?
+4. Efficiency: Is the workflow efficient or are there redundant steps?
+5. Clarity: Is the workflow well-documented and clear?
+
+Provide your evaluation as a JSON object with the following fields:
+- score: A numeric score from 0-100
+- metrics: An object with scores for each criterion (0.0-1.0)
+- suggestions: An array of specific suggestions for improvement
+
+Evaluation:
+"""
+        
+        try:
+            # Call Bedrock to generate the evaluation
+            model_id = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-v2")
+            response = self.bedrock_client.invoke_model(
+                model_id=model_id,
+                prompt=prompt,
+                parameters={
+                    "maxTokens": 1000,
+                    "temperature": 0.2,
+                    "topP": 0.9
+                }
+            )
+            
+            # Extract the evaluation from the response
+            if "anthropic" in model_id.lower():
+                completion = response.get("completion", "")
+            else:
+                completion = response.get("outputText", "")
+            
+            # Try to parse the JSON response
+            try:
+                # Find JSON object in the response
+                json_start = completion.find('{')
+                json_end = completion.rfind('}') + 1
+                if json_start >= 0 and json_end > json_start:
+                    json_str = completion[json_start:json_end]
+                    evaluation = json.loads(json_str)
+                    
+                    # Ensure the evaluation has the required fields
+                    if "score" not in evaluation:
+                        evaluation["score"] = 70  # Default score
+                    if "metrics" not in evaluation:
+                        evaluation["metrics"] = {}
+                    if "suggestions" not in evaluation:
+                        evaluation["suggestions"] = []
+                    
+                    # Add improvement flag
+                    evaluation["needs_improvement"] = evaluation["score"] < 70 or len(evaluation["suggestions"]) > 0
+                    
+                    return evaluation
+            except Exception as e:
+                print(f"Error parsing Bedrock evaluation response: {e}")
+        except Exception as e:
+            print(f"Error calling Bedrock for evaluation: {e}")
+        
+        # Fall back to rule-based evaluation if Bedrock fails
+        return self._evaluate_workflow(workflow, test_results)
     
     def _evaluate_workflow(self, workflow: Dict, test_results: Optional[Dict] = None) -> Dict[str, Any]:
         """
@@ -140,11 +247,14 @@ class EvaluatorAgent(Agent):
         
         score = sum(metrics[key] * weights[key] for key in metrics) * 100
         
-        return {
+        result = {
             "score": round(score),
             "metrics": metrics,
-            "suggestions": suggestions
+            "suggestions": suggestions,
+            "needs_improvement": round(score) < 70 or len(suggestions) > 0
         }
+        
+        return result
     
     def _incorporate_test_results(self, metrics: Dict[str, float], suggestions: List[str], test_results: Dict) -> None:
         """

@@ -6,22 +6,30 @@ when the existing library does not have what is needed for a given task.
 """
 from typing import Dict, Any, Optional, Union
 import json
+import os
 from pathlib import Path
 
 from tdev.core.agent import Agent
 from tdev.core.registry import get_registry
 from tdev.core.schema import AgentMeta, ToolMeta
+from tdev.agent_core.bedrock_client import BedrockClient
 
 class AutoAgentComposer(Agent):
     """
     Agent responsible for generating new agents and tools based on specifications.
     
     This is the implementation of the "agno" system described in the architecture.
+    It uses AWS Bedrock for intelligent code generation when available.
     """
     
     def __init__(self):
         """Initialize the AutoAgentComposer."""
         self.registry = get_registry()
+        self.bedrock_client = None
+        try:
+            self.bedrock_client = BedrockClient()
+        except Exception as e:
+            print(f"Warning: Could not initialize Bedrock client: {e}")
         self.templates = {
             "agent": {
                 "simple": """from tdev.core.agent import Agent
@@ -225,10 +233,13 @@ def {name_lower}_tool(input_data):
         
     def _generate_implementation(self, component_type, name, goal, tools, implementation_hints=""):
         """Generate implementation code based on the goal and available tools."""
-        # In a production system, this would use an LLM to generate the implementation
-        # For now, we'll generate a more intelligent stub based on the goal
+        # Use Bedrock for intelligent code generation if available
+        if self.bedrock_client:
+            implementation = self._generate_with_bedrock(component_type, name, goal, tools, implementation_hints)
+            if implementation:
+                return implementation
         
-        # Default implementation
+        # Default implementation if Bedrock is not available or fails
         default_impl = "result = input_data  # Replace with actual implementation"
         
         # If we have implementation hints, use them
@@ -271,6 +282,101 @@ def {name_lower}_tool(input_data):
         
         # Default implementation with a TODO comment
         return f"# TODO: Implement {component_type} logic for: {goal}\n        {default_impl}"
+        
+    def _generate_with_bedrock(self, component_type, name, goal, tools, implementation_hints=""):
+        """
+        Generate implementation code using AWS Bedrock.
+        
+        Args:
+            component_type: Type of component ("agent" or "tool")
+            name: Name of the component
+            goal: Description of what the component should do
+            tools: List of tools to use (for agents)
+            implementation_hints: Optional hints for implementation
+            
+        Returns:
+            Generated implementation code or None if generation fails
+        """
+        try:
+            # Prepare the prompt for Bedrock
+            tools_str = ", ".join(tools) if tools else "None"
+            
+            prompt = f"""You are an AI code generator. Your task is to generate Python code for a {component_type} in the T-Developer framework.
+
+Details:
+- Name: {name}
+- Type: {component_type}
+- Goal: {goal}
+- Available tools: {tools_str}
+- Implementation hints: {implementation_hints}
+
+Requirements:
+- The code should be a Python function or method body that can be inserted into a {component_type} class/function
+- For an agent, the code should implement the 'run' method that takes 'input_data' as parameter
+- For a tool, the code should implement a function that takes 'input_data' as parameter
+- The code should return a result variable
+- The code should be well-commented and follow best practices
+- If tools are available, use them appropriately
+
+Generate ONLY the implementation code (function/method body), not the entire class or function definition.
+Do not include the function/method signature or decorators.
+
+Code:
+"""
+            
+            # Call Bedrock to generate the code
+            model_id = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-v2")
+            response = self.bedrock_client.invoke_model(
+                model_id=model_id,
+                prompt=prompt,
+                parameters={
+                    "maxTokens": 1500,
+                    "temperature": 0.4,
+                    "topP": 0.9
+                }
+            )
+            
+            # Extract the code from the response
+            if "anthropic" in model_id.lower():
+                completion = response.get("completion", "")
+            else:
+                completion = response.get("outputText", "")
+            
+            # Clean up the code
+            # Remove any markdown code block markers
+            code = completion.replace("```python", "").replace("```", "")
+            
+            # Remove any function/method signature
+            if "def run" in code:
+                code = code[code.find("def run"):]
+                code = code[code.find(":") + 1:]
+            elif "def " in code:
+                code = code[code.find("def "):]
+                code = code[code.find(":") + 1:]
+            
+            # Ensure proper indentation
+            lines = code.strip().split("\n")
+            cleaned_lines = []
+            for line in lines:
+                # Remove excessive indentation but keep some for method body
+                stripped = line.lstrip()
+                if stripped:
+                    cleaned_lines.append("        " + stripped)
+                else:
+                    cleaned_lines.append("")
+            
+            # Join the lines back together
+            cleaned_code = "\n".join(cleaned_lines)
+            
+            # Ensure the code returns a result
+            if "return" not in cleaned_code:
+                cleaned_code += "\n        return input_data  # Default return if no return statement was generated"
+            
+            return cleaned_code
+            
+        except Exception as e:
+            print(f"Error generating code with Bedrock: {e}")
+            return None
     
     def _find_relevant_tools(self, goal):
         """Find tools that might be relevant for the given goal."""
