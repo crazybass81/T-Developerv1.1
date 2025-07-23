@@ -86,6 +86,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - [Agent Core](tdev/agent_core/README.md) - AWS Bedrock Agent Core integration
 - [API Server](tdev/api/README.md) - API server for UI integration
 - [Monitoring](tdev/monitoring/README.md) - Monitoring and feedback collection
+- [Notifications](docs/NOTIFICATIONS.md) - Slack and other notification systems
 
 ### User Guides
 - [CLI Usage](docs/CLI_USAGE.md) - Command-line interface reference
