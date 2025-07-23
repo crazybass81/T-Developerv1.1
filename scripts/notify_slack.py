@@ -95,16 +95,18 @@ def main():
     # Get webhook URL from args or environment
     webhook_url = args.webhook or os.environ.get("SLACK_WEBHOOK_URL")
     if not webhook_url:
-        print("Error: Slack webhook URL not provided")
-        sys.exit(1)
+        print("Warning: Slack webhook URL not provided, skipping notification")
+        # Exit with success code since this is now considered optional
+        sys.exit(0)
     
     # Send notification
     response = send_slack_notification(webhook_url, args.message, args.status)
     if response and response.status_code == 200:
         print("Slack notification sent successfully")
     else:
-        print("Failed to send Slack notification")
-        sys.exit(1)
+        print("Warning: Failed to send Slack notification")
+        # Don't fail the build if Slack notification fails
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()

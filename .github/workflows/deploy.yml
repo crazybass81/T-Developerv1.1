@@ -44,13 +44,14 @@ jobs:
       run: |
         python scripts/update_registry_with_deployment_info.py
     - name: Notify Slack on successful deployment
+      if: success() && secrets.SLACK_WEBHOOK_URL
       run: |
         pip install -r scripts/requirements.txt
         python scripts/notify_slack.py --message "🚀 Deployment completed successfully" --status "success"
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     - name: Notify Slack on deployment failure
-      if: failure()
+      if: failure() && secrets.SLACK_WEBHOOK_URL
       run: |
         pip install -r scripts/requirements.txt
         python scripts/notify_slack.py --message "❌ Deployment failed" --status "error"

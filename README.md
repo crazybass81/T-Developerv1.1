@@ -91,6 +91,7 @@ Comprehensive documentation is available in the `docs/` directory:
 ### User Guides
 - [CLI Usage](docs/CLI_USAGE.md) - Command-line interface reference
 - [Deployment](deployment/cloudformation.yaml) - AWS CloudFormation template for deployment
+- [CI Debugging](docs/CI_DEBUGGING.md) - Guide for debugging CI pipeline failures
 
 ## Core Agent Squad
 
