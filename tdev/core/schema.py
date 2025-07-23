@@ -1,60 +1,26 @@
 from typing import Dict, Any, List, Optional, Union
+from dataclasses import dataclass, field
 
 # Type aliases for clarity
 MetadataDict = Dict[str, Any]
 SchemaDict = Dict[str, str]
 
-class TeamMeta:
-    """
-    Metadata for a team.
-    """
-    
-    def __init__(
-        self,
-        name: str,
-        type: str = "team",
-        class_path: str = None,
-        description: str = None,
-        brain_count: int = 2,
-        reusability: str = "D",
-        input_schema: Optional[SchemaDict] = None,
-        output_schema: Optional[SchemaDict] = None,
-        tags: Optional[List[str]] = None,
-        path: Optional[str] = None,
-    ):
-        """
-        Initialize team metadata.
-        
-        Args:
-            name: The name of the team
-            type: The type of component ('team')
-            class_path: The import path to the team class
-            description: A description of the team
-            brain_count: The number of decision points (2+ for teams)
-            reusability: The reusability tier ('D' for teams)
-            input_schema: Optional schema for input data
-            output_schema: Optional schema for output data
-            tags: Optional tags for categorization
-            path: Optional path to the team's code file
-        """
-        self.name = name
-        self.type = type
-        self.class_path = class_path
-        self.description = description or f"{name} team"
-        self.brain_count = brain_count
-        self.reusability = reusability
-        self.input_schema = input_schema or {}
-        self.output_schema = output_schema or {}
-        self.tags = tags or []
-        self.path = path
+@dataclass
+class BaseMeta:
+    """Base class for component metadata."""
+    name: str
+    type: str
+    class_path: Optional[str] = None
+    description: Optional[str] = None
+    brain_count: int = 0
+    reusability: str = "A"
+    input_schema: Dict[str, str] = field(default_factory=dict)
+    output_schema: Dict[str, str] = field(default_factory=dict)
+    tags: List[str] = field(default_factory=list)
+    path: Optional[str] = None
     
     def to_dict(self) -> MetadataDict:
-        """
-        Convert the metadata to a dictionary.
-        
-        Returns:
-            A dictionary representation of the metadata
-        """
+        """Convert the metadata to a dictionary."""
         return {
             "name": self.name,
             "type": self.type,
@@ -67,6 +33,20 @@ class TeamMeta:
             "tags": self.tags,
             "path": self.path,
         }
+
+@dataclass
+class TeamMeta(BaseMeta):
+    """
+    Metadata for a team.
+    """
+    type: str = "team"
+    brain_count: int = 2
+    reusability: str = "D"
+    
+    def __post_init__(self):
+        """Set default description if not provided."""
+        if not self.description:
+            self.description = f"{self.name} team"
     
     @classmethod
     def from_dict(cls, data: MetadataDict) -> 'TeamMeta':
@@ -93,69 +73,19 @@ class TeamMeta:
         )
 
 
-class AgentMeta:
+@dataclass
+class AgentMeta(BaseMeta):
     """
     Metadata for an agent.
     """
+    type: str = "agent"
+    brain_count: int = 1
+    reusability: str = "B"
     
-    def __init__(
-        self,
-        name: str,
-        type: str = "agent",
-        class_path: str = None,
-        description: str = None,
-        brain_count: int = 1,
-        reusability: str = "B",
-        input_schema: Optional[SchemaDict] = None,
-        output_schema: Optional[SchemaDict] = None,
-        tags: Optional[List[str]] = None,
-        path: Optional[str] = None,
-    ):
-        """
-        Initialize agent metadata.
-        
-        Args:
-            name: The name of the agent
-            type: The type of component ('agent')
-            class_path: The import path to the agent class
-            description: A description of the agent
-            brain_count: The number of decision points (1 for agents)
-            reusability: The reusability tier ('B' for agents)
-            input_schema: Optional schema for input data
-            output_schema: Optional schema for output data
-            tags: Optional tags for categorization
-            path: Optional path to the agent's code file
-        """
-        self.name = name
-        self.type = type
-        self.class_path = class_path
-        self.description = description or f"{name} agent"
-        self.brain_count = brain_count
-        self.reusability = reusability
-        self.input_schema = input_schema or {}
-        self.output_schema = output_schema or {}
-        self.tags = tags or []
-        self.path = path
-    
-    def to_dict(self) -> MetadataDict:
-        """
-        Convert the metadata to a dictionary.
-        
-        Returns:
-            A dictionary representation of the metadata
-        """
-        return {
-            "name": self.name,
-            "type": self.type,
-            "class": self.class_path,
-            "description": self.description,
-            "brain_count": self.brain_count,
-            "reusability": self.reusability,
-            "input_schema": self.input_schema,
-            "output_schema": self.output_schema,
-            "tags": self.tags,
-            "path": self.path,
-        }
+    def __post_init__(self):
+        """Set default description if not provided."""
+        if not self.description:
+            self.description = f"{self.name} agent"
     
     @classmethod
     def from_dict(cls, data: MetadataDict) -> 'AgentMeta':
@@ -182,69 +112,19 @@ class AgentMeta:
         )
 
 
-class ToolMeta:
+@dataclass
+class ToolMeta(BaseMeta):
     """
     Metadata for a tool.
     """
+    type: str = "tool"
+    brain_count: int = 0
+    reusability: str = "A"
     
-    def __init__(
-        self,
-        name: str,
-        type: str = "tool",
-        class_path: str = None,
-        description: str = None,
-        brain_count: int = 0,
-        reusability: str = "A",
-        input_schema: Optional[SchemaDict] = None,
-        output_schema: Optional[SchemaDict] = None,
-        tags: Optional[List[str]] = None,
-        path: Optional[str] = None,
-    ):
-        """
-        Initialize tool metadata.
-        
-        Args:
-            name: The name of the tool
-            type: The type of component ('tool')
-            class_path: The import path to the tool class or function
-            description: A description of the tool
-            brain_count: The number of decision points (0 for tools)
-            reusability: The reusability tier ('A' for tools)
-            input_schema: Optional schema for input data
-            output_schema: Optional schema for output data
-            tags: Optional tags for categorization
-            path: Optional path to the tool's code file
-        """
-        self.name = name
-        self.type = type
-        self.class_path = class_path
-        self.description = description or f"{name} tool"
-        self.brain_count = brain_count
-        self.reusability = reusability
-        self.input_schema = input_schema or {}
-        self.output_schema = output_schema or {}
-        self.tags = tags or []
-        self.path = path
-    
-    def to_dict(self) -> MetadataDict:
-        """
-        Convert the metadata to a dictionary.
-        
-        Returns:
-            A dictionary representation of the metadata
-        """
-        return {
-            "name": self.name,
-            "type": self.type,
-            "class": self.class_path,
-            "description": self.description,
-            "brain_count": self.brain_count,
-            "reusability": self.reusability,
-            "input_schema": self.input_schema,
-            "output_schema": self.output_schema,
-            "tags": self.tags,
-            "path": self.path,
-        }
+    def __post_init__(self):
+        """Set default description if not provided."""
+        if not self.description:
+            self.description = f"{self.name} tool"
     
     @classmethod
     def from_dict(cls, data: MetadataDict) -> 'ToolMeta':
