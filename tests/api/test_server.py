@@ -16,11 +16,9 @@ class TestAPIServer(unittest.TestCase):
     
     def setUp(self):
         """Set up test fixtures."""
-        self.client = TestClient(app)
-        
         # Create proper mock registry with all required methods
         self.mock_registry = MagicMock()
-        self.mock_registry.get.return_value = {"name": "TestAgent", "type": "agent"}
+        self.mock_registry.get.return_value = {"name": "PlannerAgent", "type": "agent"}
         self.mock_registry.get_by_type.return_value = [
             {"name": "Agent1", "type": "agent"},
             {"name": "Agent2", "type": "agent"}
@@ -42,6 +40,9 @@ class TestAPIServer(unittest.TestCase):
         self.mock_feedback_class = self.feedback_patcher.start()
         self.mock_feedback = MagicMock()
         self.mock_feedback_class.return_value = self.mock_feedback
+        
+        # Create test client after all patches are set up
+        self.client = TestClient(app)
     
     def tearDown(self):
         """Clean up the test environment."""

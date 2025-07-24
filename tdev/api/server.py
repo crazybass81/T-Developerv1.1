@@ -100,7 +100,7 @@ async def classify(request: CodeRequest):
 @app.post("/feedback")
 async def submit_feedback(request: FeedbackRequest):
     """Submit feedback for an agent."""
-    result = feedback_collector.collect(request.dict())
+    result = feedback_collector.collect(request.model_dump())
     if not result.get("success", False):
         raise HTTPException(status_code=400, detail=result.get("error", "Failed to submit feedback"))
     return result
