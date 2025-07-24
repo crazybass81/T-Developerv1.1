@@ -196,8 +196,7 @@ def {name_lower}_tool(input_data):
             name=f"{name}Agent",
             class_path=f"tdev.agents.{name.lower()}_agent.{name}Agent",
             description=goal,
-            tags=["generated", "agno"],
-            tools=tools
+            tags=["generated", "agno"]
         )
         
         return code, metadata

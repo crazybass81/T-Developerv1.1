@@ -35,7 +35,8 @@ class TestAPIServerSimple:
         self.mock_feedback_class.return_value = self.mock_feedback
         
         # Create httpx client
-        self.client = httpx.AsyncClient(app=app, base_url="http://test")
+        from httpx import ASGITransport
+        self.client = httpx.AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
     
     def tearDown(self):
         """Clean up patches."""

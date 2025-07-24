@@ -183,7 +183,7 @@ Evaluation:
             metrics["structural_completeness"] = min(1.0, len(steps) / 5)  # More steps = more complete, up to 5
         
         # Check agent suitability
-        available_agents = {agent["name"]: agent for agent in registry.get_by_type("agent")}
+        available_agents = {name: metadata for name, metadata in registry.get_all().items() if metadata.get("type") == "agent"}
         missing_agents = []
         for i, step in enumerate(steps):
             agent_name = step.get("agent")

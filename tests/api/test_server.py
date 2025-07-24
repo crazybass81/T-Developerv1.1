@@ -42,6 +42,7 @@ class TestAPIServer(unittest.TestCase):
         self.mock_feedback_class.return_value = self.mock_feedback
         
         # Create test client after all patches are set up
+        from fastapi.testclient import TestClient
         self.client = TestClient(app)
     
     def tearDown(self):

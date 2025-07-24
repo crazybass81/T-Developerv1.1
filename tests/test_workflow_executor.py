@@ -80,7 +80,7 @@ class TestWorkflowExecutor:
         monkeypatch.setattr("tdev.agents.workflow_executor_agent.get_registry", lambda: self.mock_registry)
         
         # Execute the workflow
-        result = self.executor.run("test-workflow")
+        result = self.executor.run({"workflow": "test-workflow", "input": {}})
         
         # Check that the mock agent was called
         assert self.mock_agent.called
