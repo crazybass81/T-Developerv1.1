@@ -1,0 +1,7 @@
+{
+  "type": "agent",
+  "name": "Classifier",
+  "goal": "Analyze code to classify it as Tool, Agent, or Team based on structure and decision points",
+  "input": "Path to a Python file or code string to analyze",
+  "output": "Classification metadata including type (tool/agent/team), brain count, and reusability tier"
+}

@@ -1,0 +1,7 @@
+{
+  "type": "agent",
+  "name": "Evaluator",
+  "goal": "Evaluate workflows and agents for quality, efficiency, and suitability",
+  "input": "A workflow definition or agent code to evaluate",
+  "output": "Evaluation results including score, feedback, and improvement suggestions"
+}

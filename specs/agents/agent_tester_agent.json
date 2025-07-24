@@ -1,0 +1,7 @@
+{
+  "type": "agent",
+  "name": "AgentTester",
+  "goal": "Test agents and tools by running them with sample inputs and comparing outputs to expected results",
+  "input": "Name of the agent or tool to test, and optional test cases",
+  "output": "Test results including success status, passed/failed counts, and details"
+}

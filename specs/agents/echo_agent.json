@@ -1,0 +1,7 @@
+{
+  "type": "agent",
+  "name": "Echo",
+  "goal": "Return the input data unmodified, serving as a simple pass-through agent",
+  "input": "Any data that needs to be echoed back",
+  "output": "The same data that was provided as input"
+}
