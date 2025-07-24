@@ -82,8 +82,8 @@ class PlannerAgent(Agent):
             List of workflow steps
         """
         # Prepare the prompt for Bedrock
-        agent_names = [agent["name"] for agent in available_agents]
-        tool_names = [tool["name"] for tool in available_tools]
+        agent_names = [agent.get("name", str(agent)) for agent in available_agents if isinstance(agent, dict)]
+        tool_names = [tool.get("name", str(tool)) for tool in available_tools if isinstance(tool, dict)]
         
         prompt = f"""You are an AI workflow planner. Your task is to create a workflow plan to achieve a goal.
 
@@ -195,7 +195,13 @@ Workflow plan:
         Identify any capabilities (agents/tools) that are needed but not available.
         """
         missing = []
-        available_agent_names = [agent["name"] for agent in available_agents]
+        # Handle both registry formats - some have 'name' key, others use the key as name
+        available_agent_names = []
+        for agent in available_agents:
+            if isinstance(agent, dict):
+                # Try 'name' field first, then use the key itself
+                name = agent.get("name") or agent.get("id") or str(agent)
+                available_agent_names.append(name)
         
         for step in steps:
             agent_name = step.get("agent")

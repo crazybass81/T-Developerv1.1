@@ -29,9 +29,12 @@ class TestPlannerAgent:
         assert workflow["id"] is not None
         assert len(workflow["steps"]) > 0
     
-    def test_create_workflow_steps(self):
-        """Test workflow step creation."""
-        steps = self.agent._create_workflow_steps("Echo test input")
+    def test_analyze_goal(self):
+        """Test goal analysis."""
+        available_agents = [{"name": "EchoAgent"}]
+        available_tools = []
+        
+        steps = self.agent._analyze_goal("Echo test input", available_agents, available_tools)
         
         assert len(steps) > 0
         assert all("agent" in step for step in steps)
@@ -49,9 +52,9 @@ class TestPlannerAgent:
         assert len(missing) == 1
         assert missing[0]["name"] == "NonExistentAgent"
     
-    def test_generate_workflow_id(self):
-        """Test workflow ID generation."""
-        workflow_id = self.agent._generate_workflow_id("test goal")
+    def test_generate_id(self):
+        """Test ID generation."""
+        workflow_id = self.agent._generate_id("test goal")
         
         assert isinstance(workflow_id, str)
         assert len(workflow_id) > 0
