@@ -150,7 +150,7 @@ def {name}(input_data: Any) -> Any:
     def list_generated_components(self) -> Dict[str, Any]:
         """List all generated components."""
         all_components = self.registry.get_all()
-        generated = {{k: v for k, v in all_components.items() if v.get("generated", False)}}
+        generated = {k: v for k, v in all_components.items() if v.get("generated", False)}
         
         return {
             "success": True,

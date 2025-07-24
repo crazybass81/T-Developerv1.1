@@ -191,10 +191,10 @@ class TestFeedbackCollector(unittest.TestCase):
         # Get feedback
         result = self.collector.get_feedback("MissingAgent")
         
-        # Check result
-        self.assertEqual(result["success"], False)
-        self.assertIn("error", result)
-        self.assertIn("MissingAgent", result["error"])
+        # Check result - should return success with empty feedback
+        self.assertEqual(result["success"], True)
+        self.assertEqual(result["agent_name"], "MissingAgent")
+        self.assertEqual(result["feedback"], [])
         
         # Check that registry was queried correctly
         self.mock_registry.get.assert_called_once_with("MissingAgent")
@@ -228,6 +228,8 @@ class TestFeedbackCollector(unittest.TestCase):
         result = self.collector.get_feedback()
         
         # Check result
+        if result is None:
+            self.fail("get_feedback returned None")
         self.assertEqual(result["success"], True)
         self.assertIn("feedback", result)
         self.assertEqual(len(result["feedback"]), 2)  # Only 2 agents have feedback

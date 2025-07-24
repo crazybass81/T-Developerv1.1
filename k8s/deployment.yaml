@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t-developer-api
+  labels:
+    app: t-developer-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: t-developer-api
+  template:
+    metadata:
+      labels:
+        app: t-developer-api
+    spec:
+      containers:
+      - name: t-developer-api
+        image: t-developer:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: API_PORT
+          value: "8000"
+        - name: DATABASE_URL
+          value: "postgresql://user:pass@postgres:5432/tdev"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: t-developer-api-service
+spec:
+  selector:
+    app: t-developer-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+  type: LoadBalancer

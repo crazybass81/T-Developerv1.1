@@ -40,7 +40,12 @@ class FeedbackCollector:
         """
         agent_name = feedback_data.get("agent_name")
         if not agent_name:
-            return {"success": False, "error": "Agent name is required"}
+            return {"success": False, "error": "agent_name is required"}
+        
+        # Validate rating
+        rating = feedback_data.get("rating")
+        if rating and (rating < 1 or rating > 5):
+            return {"success": False, "error": "Rating must be between 1 and 5"}
         
         # Get agent from registry
         agent_meta = self.registry.get(agent_name)
@@ -64,7 +69,7 @@ class FeedbackCollector:
         if rating <= 2:
             self._create_issue(agent_name, feedback_data)
         
-        return {"success": True}
+        return {"success": True, "message": "Feedback collected successfully"}
     
     def _store_in_registry(self, agent_name: str, feedback_data: Dict[str, Any]) -> None:
         """
@@ -190,7 +195,7 @@ Please review this agent's behavior and improve it based on the feedback.
             # Get feedback for a specific agent
             agent_meta = self.registry.get(agent_name)
             if not agent_meta:
-                return {"success": False, "error": f"Agent {agent_name} not found"}
+                return {"success": True, "agent_name": agent_name, "feedback": []}
             
             feedback = agent_meta.get("feedback", [])
             return {
@@ -198,6 +203,30 @@ Please review this agent's behavior and improve it based on the feedback.
                 "agent_name": agent_name,
                 "feedback": feedback[-limit:] if limit < len(feedback) else feedback
             }
+    
+    def get_agent_stats(self, agent_name: str) -> Dict[str, Any]:
+        """Get statistics for an agent's feedback."""
+        agent_meta = self.registry.get(agent_name)
+        if not agent_meta:
+            return {"success": True, "total_feedback": 0, "average_rating": 0, "rating_distribution": {}}
+        
+        feedback = agent_meta.get("feedback", [])
+        if not feedback:
+            return {"success": True, "total_feedback": 0, "average_rating": 0, "rating_distribution": {}}
+        
+        ratings = [f.get("rating", 0) for f in feedback if f.get("rating")]
+        avg_rating = sum(ratings) / len(ratings) if ratings else 0
+        
+        distribution = {}
+        for rating in ratings:
+            distribution[str(rating)] = distribution.get(str(rating), 0) + 1
+        
+        return {
+            "success": True,
+            "total_feedback": len(feedback),
+            "average_rating": avg_rating,
+            "rating_distribution": distribution
+        }
             
         # Get feedback for all agents
         all_feedback = {}

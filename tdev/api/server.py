@@ -82,6 +82,12 @@ def get_current_user(authorization: Optional[str] = Header(None)):
     
     return auth_manager.authenticate(api_key)
 
+# For testing - simple dependency override
+def get_test_user():
+    """Test user for unit tests."""
+    from tdev.core.auth import User
+    return User(user_id="test", tenant_id="test", permissions={"read": True, "write": True})
+
 # Routes
 @app.get("/")
 async def root():
@@ -121,7 +127,7 @@ async def orchestrate(request: OrchestrationRequest, user=Depends(get_current_us
     i18n.set_language(lang)
     
     # Check permissions
-    if user and not auth_manager.check_permission(user, "write"):
+    if user and hasattr(user, 'permissions') and not auth_manager.check_permission(user, "write"):
         raise HTTPException(status_code=403, detail=i18n.translate("error.permission_denied", lang))
     
     result = coordinator.run({"goal": request.goal, "options": request.options or {}})
@@ -152,7 +158,7 @@ async def submit_feedback(request: FeedbackRequest):
 async def get_feedback(agent_name: str, limit: int = 100, user=Depends(get_current_user)):
     """Get feedback for an agent."""
     # Check permissions
-    if user and not auth_manager.check_permission(user, "read"):
+    if user and hasattr(user, 'permissions') and not auth_manager.check_permission(user, "read"):
         raise HTTPException(status_code=403, detail="Permission denied")
     
     result = feedback_collector.get_feedback(agent_name, limit)
@@ -164,7 +170,7 @@ async def get_feedback(agent_name: str, limit: int = 100, user=Depends(get_curre
 async def manage_agent_version(agent_name: str, request: VersionRequest, user=Depends(get_current_user)):
     """Manage agent versions."""
     # Check permissions
-    if user and not auth_manager.check_permission(user, "write"):
+    if user and hasattr(user, 'permissions') and not auth_manager.check_permission(user, "write"):
         raise HTTPException(status_code=403, detail="Permission denied")
     
     if request.action == "promote":

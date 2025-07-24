@@ -12,7 +12,14 @@ class TestFeedbackCollector:
     
     def setup_method(self):
         """Set up test fixtures."""
+        # Mock the registry to avoid interference between tests
+        from unittest.mock import MagicMock
+        mock_registry = MagicMock()
+        mock_registry.get.return_value = {"name": "TestAgent", "type": "agent"}
+        mock_registry.get_all.return_value = {}
+        
         self.collector = FeedbackCollector()
+        self.collector.registry = mock_registry
     
     def test_collect_feedback_success(self):
         """Test successful feedback collection."""
