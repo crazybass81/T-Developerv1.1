@@ -94,6 +94,66 @@ tdev generate agent --name CustomAgent --goal "A custom agent that does somethin
 
 # Generate a new tool
 tdev generate tool --name CustomTool --goal "A tool that performs a specific operation"
+
+# Generate with specific plugin
+tdev generate agent --name AIAgent --goal "AI-powered analysis" --plugin bedrock-claude
+```
+
+### Phase 4 Features
+
+#### Agent Versioning
+
+```bash
+# Add a new version of an agent
+tdev version add MyAgent 2.0 --metadata '{"description": "Enhanced version"}'
+
+# Promote a version to active
+tdev version promote MyAgent 2.0
+
+# List all versions of an agent
+tdev version list MyAgent
+
+# Compare agent versions (A/B testing)
+tdev version compare MyAgent 1.0 2.0
+```
+
+#### Authentication & Multi-Tenancy
+
+```bash
+# Generate API key for authentication
+tdev auth generate-key --user john.doe --permissions read,write,deploy
+
+# Authenticate with API key
+tdev auth login --api-key your-api-key-here
+
+# Check current user permissions
+tdev auth whoami
+```
+
+#### Internationalization
+
+```bash
+# Set language preference
+tdev config set language ko
+
+# Get localized help
+tdev --help --lang ko
+
+# Run orchestration with language preference
+tdev orchestrate "데이터를 분석해주세요" --lang ko
+```
+
+#### Plugin Management
+
+```bash
+# List available plugins
+tdev plugins list
+
+# Install a plugin
+tdev plugins install bedrock-claude
+
+# Use specific plugin for generation
+tdev generate agent --plugin bedrock-claude --goal "Advanced analysis"
 ```
 
 ### Orchestration
