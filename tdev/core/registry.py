@@ -1,7 +1,7 @@
 import json
 import importlib
 from pathlib import Path
-from typing import Dict, Any, Optional, Union, Type
+from typing import Dict, Any, Optional, Union, Type, List
 
 from tdev.core import config
 from tdev.core.agent import Agent
@@ -92,6 +92,26 @@ class AgentRegistry:
         except (ImportError, AttributeError, ValueError) as e:
             print(f"Error instantiating {name}: {e}")
             return None
+    
+    def get(self, name: str) -> Optional[Dict[str, Any]]:
+        """Get a component by name."""
+        return self._registry.get(name)
+    
+    def get_by_type(self, component_type: str) -> List[Dict[str, Any]]:
+        """Get all components of a specific type."""
+        return [
+            component for component in self._registry.values()
+            if component.get("type") == component_type
+        ]
+    
+    def get_all(self) -> Dict[str, Dict[str, Any]]:
+        """Get all components in the registry."""
+        return self._registry
+    
+    def update(self, name: str, metadata: Dict[str, Any]):
+        """Update a component's metadata."""
+        self._registry[name] = metadata
+        self._save_registry()
     
     def list_components(self, component_type: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
         """
