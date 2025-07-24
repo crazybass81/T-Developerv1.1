@@ -15,13 +15,21 @@ class TestAPIServer(unittest.TestCase):
     """Test the API server."""
     
     def setUp(self):
-        """Set up the test environment."""
+        """Set up test fixtures."""
         self.client = TestClient(app)
         
-        # Mock the registry
+        # Create proper mock registry with all required methods
+        self.mock_registry = MagicMock()
+        self.mock_registry.get.return_value = {"name": "TestAgent", "type": "agent"}
+        self.mock_registry.get_by_type.return_value = [
+            {"name": "Agent1", "type": "agent"},
+            {"name": "Agent2", "type": "agent"}
+        ]
+        
+        # Patch get_registry to return our mock
         self.registry_patcher = patch('tdev.api.server.get_registry')
-        self.mock_registry = self.registry_patcher.start()
-        self.mock_registry.return_value = MagicMock()
+        self.mock_get_registry = self.registry_patcher.start()
+        self.mock_get_registry.return_value = self.mock_registry
         
         # Mock the coordinator
         self.coordinator_patcher = patch('tdev.api.server.DevCoordinatorAgent')
@@ -51,13 +59,6 @@ class TestAPIServer(unittest.TestCase):
     
     def test_list_agents(self):
         """Test the list_agents endpoint."""
-        # Configure mock registry
-        mock_registry = self.mock_registry.return_value
-        mock_registry.get_by_type.return_value = [
-            {"name": "Agent1", "type": "agent"},
-            {"name": "Agent2", "type": "agent"}
-        ]
-        
         # Make request
         response = self.client.get("/agents")
         
@@ -70,7 +71,7 @@ class TestAPIServer(unittest.TestCase):
         self.assertEqual(data["agents"][1]["name"], "Agent2")
         
         # Check that registry was called correctly
-        mock_registry.get_by_type.assert_called_once_with("agent")
+        self.mock_registry.get_by_type.assert_called_once_with("agent")
     
     def test_orchestrate(self):
         """Test the orchestrate endpoint."""
