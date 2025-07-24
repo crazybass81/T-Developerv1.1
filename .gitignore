@@ -57,4 +57,4 @@ logs/
 .aws/
 
 # Generated files
-generated/
+generated/node_modules/
