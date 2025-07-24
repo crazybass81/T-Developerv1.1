@@ -2,6 +2,7 @@ import os
 import ast
 import re
 from pathlib import Path
+from typing import Union, Dict, Any
 from tdev.core.agent import Agent
 
 class ClassifierAgent(Agent):
@@ -12,16 +13,25 @@ class ClassifierAgent(Agent):
     the number of decision points (brains) and coordination presence.
     """
     
-    def run(self, target_file: str):
+    def run(self, request: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Classify a file.
+        Classify a file or code content.
         
         Args:
-            target_file: The path to the file to classify
+            request: Either a file path (str) or dict with 'code' key
             
         Returns:
             A dictionary with classification results
         """
+        # Handle both string and dict input
+        if isinstance(request, dict):
+            target_file = request.get("code", "")
+            # If code is provided as content, process directly
+            if not os.path.exists(target_file):
+                return self._classify_code_content(target_file)
+        else:
+            target_file = request
+        
         print(f"ClassifierAgent: Classifying {target_file}")
         
         # Read the file content
@@ -94,6 +104,33 @@ class ClassifierAgent(Agent):
         
         # Default to file name
         return file_name
+    
+    def _classify_code_content(self, content: str) -> Dict[str, Any]:
+        """Classify code content directly."""
+        # Check if it's a team
+        if self._is_team(content):
+            return {
+                "type": "team",
+                "name": self._extract_name("unknown", content, "team"),
+                "brain_count": 2,
+                "reusability": "D"
+            }
+        # Check if it's a tool
+        elif self._is_tool(content):
+            return {
+                "type": "tool",
+                "name": self._extract_name("unknown", content, "tool"),
+                "brain_count": 0,
+                "reusability": "A"
+            }
+        # Default to agent
+        else:
+            return {
+                "type": "agent",
+                "name": self._extract_name("unknown", content, "agent"),
+                "brain_count": 1,
+                "reusability": "B"
+            }
     
     def _default_classification(self, target_file):
         """Provide a default classification based on file path."""
