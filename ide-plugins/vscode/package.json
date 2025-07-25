@@ -1,0 +1,68 @@
+{
+  "name": "t-developer-vscode",
+  "displayName": "T-Developer",
+  "description": "AI Agent Orchestration for VSCode",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:t-developer.orchestrate",
+    "onCommand:t-developer.generateAgent"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "t-developer.orchestrate",
+        "title": "T-Developer: Orchestrate Goal"
+      },
+      {
+        "command": "t-developer.generateAgent",
+        "title": "T-Developer: Generate Agent"
+      },
+      {
+        "command": "t-developer.showDashboard",
+        "title": "T-Developer: Show Dashboard"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "t-developer-agents",
+          "name": "T-Developer Agents",
+          "when": "workspaceHasFolder"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "T-Developer",
+      "properties": {
+        "t-developer.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "T-Developer API URL"
+        },
+        "t-developer.apiKey": {
+          "type": "string",
+          "description": "T-Developer API Key"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^16.18.126",
+    "@types/vscode": "^1.74.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "axios": "^1.11.0"
+  }
+}

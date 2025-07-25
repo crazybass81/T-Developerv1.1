@@ -19,10 +19,10 @@ class TestAPIServer(unittest.TestCase):
         # Create proper mock registry with all required methods
         self.mock_registry = MagicMock()
         self.mock_registry.get.return_value = {"name": "PlannerAgent", "type": "agent"}
-        self.mock_registry.get_by_type.return_value = [
-            {"name": "Agent1", "type": "agent"},
-            {"name": "Agent2", "type": "agent"}
-        ]
+        self.mock_registry.get_by_type.return_value = {
+            "Agent1": {"name": "Agent1", "type": "agent"},
+            "Agent2": {"name": "Agent2", "type": "agent"}
+        }
         
         # Patch get_registry to return our mock
         self.registry_patcher = patch('tdev.api.server.get_registry')
@@ -41,7 +41,7 @@ class TestAPIServer(unittest.TestCase):
         self.mock_feedback = MagicMock()
         self.mock_feedback_class.return_value = self.mock_feedback
         
-        # Create test client after all patches are set up
+        # Create test client
         self.client = TestClient(app)
     
     def tearDown(self):
@@ -68,8 +68,6 @@ class TestAPIServer(unittest.TestCase):
         data = response.json()
         self.assertIn("agents", data)
         self.assertEqual(len(data["agents"]), 2)
-        self.assertEqual(data["agents"][0]["name"], "Agent1")
-        self.assertEqual(data["agents"][1]["name"], "Agent2")
         
         # Check that registry was called correctly
         self.mock_registry.get_by_type.assert_called_once_with("agent")

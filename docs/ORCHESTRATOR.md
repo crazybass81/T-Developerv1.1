@@ -130,6 +130,7 @@ tdev orchestrate "Create a dashboard for the data" --context '{"data_source": "a
 
 ## Advanced Features
 
+### Core Orchestration (Phase 3)
 - **Intelligent Coordination**: Use AWS Bedrock for intelligent coordination of agents
 - **Dynamic Agent Generation**: Generate new agents on-demand using AWS Bedrock
 - **Parallel Orchestration**: Coordinate multiple agent workflows simultaneously
@@ -138,3 +139,30 @@ tdev orchestrate "Create a dashboard for the data" --context '{"data_source": "a
 - **Resource Management**: Optimize resource allocation for efficient execution
 - **Deployment Integration**: Deploy agents to AWS Lambda and Bedrock Agent Core
 - **Monitoring and Feedback**: Monitor deployed agents and collect user feedback
+
+### Enterprise Features (Phase 4) ✅
+- **Agent Versioning**: Manage multiple versions with A/B testing capabilities
+- **Multi-Tenant Orchestration**: Tenant-isolated workflows with authentication
+- **Internationalized Responses**: Multi-language support (English/Korean)
+- **Plugin-Based Orchestration**: Extensible model and tool integration
+- **Continuous Learning**: Self-improvement through feedback analysis
+- **Enhanced API Integration**: WebSocket support for real-time orchestration updates
+
+### Phase 4 Orchestration Enhancements
+
+```python
+# Version-aware orchestration
+result = orchestrator.run({
+    "goal": "Process data",
+    "agent_version": "2.0",  # Use specific version
+    "tenant_id": "company-a",  # Multi-tenant support
+    "language": "ko"  # Internationalization
+})
+
+# Plugin-enhanced orchestration
+result = orchestrator.run({
+    "goal": "Generate advanced analysis",
+    "preferred_plugin": "bedrock-claude",
+    "learning_enabled": True  # Enable continuous learning
+})
+```

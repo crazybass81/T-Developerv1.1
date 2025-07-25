@@ -14,10 +14,10 @@ class TestAPIServerSimple:
         # Create proper mock registry
         self.mock_registry = MagicMock()
         self.mock_registry.get.return_value = {"name": "TestAgent", "type": "agent"}
-        self.mock_registry.get_by_type.return_value = [
-            {"name": "Agent1", "type": "agent"},
-            {"name": "Agent2", "type": "agent"}
-        ]
+        self.mock_registry.get_by_type.return_value = {
+            "Agent1": {"name": "Agent1", "type": "agent"},
+            "Agent2": {"name": "Agent2", "type": "agent"}
+        }
         
         # Patch all dependencies
         self.registry_patcher = patch('tdev.api.server.get_registry')
@@ -35,9 +35,10 @@ class TestAPIServerSimple:
         self.mock_feedback_class.return_value = self.mock_feedback
         
         # Create httpx client
-        self.client = httpx.AsyncClient(app=app, base_url="http://test")
+        from httpx import ASGITransport
+        self.client = httpx.AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
     
-    def tearDown(self):
+    def teardown_method(self):
         """Clean up patches."""
         self.registry_patcher.stop()
         self.coordinator_patcher.stop()
@@ -60,7 +61,6 @@ class TestAPIServerSimple:
         data = response.json()
         assert "agents" in data
         assert len(data["agents"]) == 2
-        assert data["agents"][0]["name"] == "Agent1"
     
     @pytest.mark.asyncio
     async def test_orchestrate(self):

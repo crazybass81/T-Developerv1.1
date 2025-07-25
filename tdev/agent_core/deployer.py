@@ -27,7 +27,11 @@ class AgentDeployer:
         """
         self.region_name = region_name or os.environ.get("AWS_REGION", "us-east-1")
         self.bedrock_client = BedrockClient(region_name=self.region_name)
-        self.lambda_client = boto3.client("lambda", region_name=self.region_name)
+        try:
+            self.lambda_client = boto3.client("lambda", region_name=self.region_name)
+        except Exception as e:
+            print(f"Warning: Could not initialize Lambda client: {e}")
+            self.lambda_client = None
         self.registry = get_registry()
     
     def deploy_agent(self, agent_name: str) -> Dict[str, Any]:
@@ -40,36 +44,50 @@ class AgentDeployer:
         Returns:
             Deployment details
         """
+        if self.lambda_client is None:
+            return {
+                "success": False,
+                "error": "Lambda client not available",
+                "agent_name": agent_name
+            }
+        
         # Get agent from registry
         agent_meta = self.registry.get(agent_name)
         if not agent_meta:
             raise ValueError(f"Agent {agent_name} not found in registry")
         
-        # Create deployment package
-        package_path = self._create_deployment_package(agent_name, agent_meta)
-        
-        # Deploy to Lambda
-        lambda_arn = self._deploy_to_lambda(agent_name, package_path, agent_meta)
-        
-        # Create Bedrock agent
-        bedrock_agent = self._create_bedrock_agent(agent_name, agent_meta, lambda_arn)
-        
-        # Update registry with deployment info
-        agent_meta["deployment"] = {
-            "type": "bedrock",
-            "lambda_arn": lambda_arn,
-            "bedrock_agent_id": bedrock_agent.get("agentId"),
-            "region": self.region_name,
-            "status": "deployed"
-        }
-        self.registry.update(agent_name, agent_meta)
-        
-        return {
-            "success": True,
-            "agent_name": agent_name,
-            "lambda_arn": lambda_arn,
-            "bedrock_agent_id": bedrock_agent.get("agentId")
-        }
+        try:
+            # Create deployment package
+            package_path = self._create_deployment_package(agent_name, agent_meta)
+            
+            # Deploy to Lambda
+            lambda_arn = self._deploy_to_lambda(agent_name, package_path, agent_meta)
+            
+            # Create Bedrock agent
+            bedrock_agent = self._create_bedrock_agent(agent_name, agent_meta, lambda_arn)
+            
+            # Update registry with deployment info
+            agent_meta["deployment"] = {
+                "type": "bedrock",
+                "lambda_arn": lambda_arn,
+                "bedrock_agent_id": bedrock_agent.get("agentId"),
+                "region": self.region_name,
+                "status": "deployed"
+            }
+            self.registry.update(agent_name, agent_meta)
+            
+            return {
+                "success": True,
+                "agent_name": agent_name,
+                "lambda_arn": lambda_arn,
+                "bedrock_agent_id": bedrock_agent.get("agentId")
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "agent_name": agent_name
+            }
     
     def _create_deployment_package(self, agent_name: str, agent_meta: Dict[str, Any]) -> str:
         """

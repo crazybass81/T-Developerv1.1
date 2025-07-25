@@ -30,6 +30,9 @@ venv/
 ENV/
 .env/
 
+# Environment variables (secrets)
+.env
+
 # IDE files
 .idea/
 .vscode/
@@ -54,4 +57,4 @@ logs/
 .aws/
 
 # Generated files
-generated/
+generated/node_modules/

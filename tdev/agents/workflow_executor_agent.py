@@ -12,37 +12,58 @@ class WorkflowExecutorAgent(Agent):
     each step in sequence, passing data between steps as needed.
     """
     
-    def run(self, workflow_id: str, input_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def run(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """
         Run a workflow.
         
         Args:
-            workflow_id: The ID of the workflow to run
-            input_data: Optional input data for the workflow
+            request: A dictionary containing:
+                - workflow: The workflow definition (dict) or workflow_id (str)
+                - input: Optional input data for the workflow
             
         Returns:
             The output data from the workflow
         """
-        print(f"WorkflowExecutorAgent: Running workflow {workflow_id}")
+        # Handle both workflow dict and workflow_id
+        workflow_data = request.get("workflow")
+        input_data = request.get("input", {})
+        
+        if isinstance(workflow_data, str):
+            # It's a workflow ID
+            workflow_id = workflow_data
+            print(f"WorkflowExecutorAgent: Running workflow {workflow_id}")
+            workflow_path = get_workflow_path(workflow_id)
+            workflow = load_workflow(workflow_path)
+        elif isinstance(workflow_data, dict):
+            # It's a workflow definition
+            print(f"WorkflowExecutorAgent: Running workflow {workflow_data}")
+            workflow = workflow_data
+        else:
+            return {"error": "Invalid workflow data provided"}
         
         # Initialize context with input data
         context = input_data or {}
         
-        # Load the workflow
-        workflow_path = get_workflow_path(workflow_id)
-        workflow = load_workflow(workflow_path)
-        
         if not workflow:
-            print(f"WorkflowExecutorAgent: Workflow not found: {workflow_id}")
-            return {"error": f"Workflow not found: {workflow_id}"}
+            return {"error": "Workflow not found or invalid"}
         
-        print(f"WorkflowExecutorAgent: Loaded workflow {workflow.id}")
+        # Handle both Workflow objects and dict workflows
+        if hasattr(workflow, 'id'):
+            workflow_id = workflow.id
+            steps = workflow.steps
+            outputs = workflow.outputs
+        else:
+            workflow_id = workflow.get('id', 'unknown')
+            steps = workflow.get('steps', [])
+            outputs = workflow.get('outputs', {})
+        
+        print(f"WorkflowExecutorAgent: Loaded workflow {workflow_id}")
         
         # Get the registry
         registry = get_registry()
         
         # Execute each step
-        for i, step in enumerate(workflow.steps):
+        for i, step in enumerate(steps):
             agent_name = step.get('agent')
             if not agent_name:
                 print(f"WorkflowExecutorAgent: Step {i+1} has no agent specified")
@@ -73,12 +94,12 @@ class WorkflowExecutorAgent(Agent):
         
         # Extract the final output
         output = {}
-        for output_name, source_key in workflow.outputs.items():
+        for output_name, source_key in outputs.items():
             output[output_name] = context.get(source_key)
         
         # If no outputs defined, return the entire context
         if not output:
             output = context
         
-        print(f"WorkflowExecutorAgent: Workflow {workflow.id} completed")
+        print(f"WorkflowExecutorAgent: Workflow {workflow_id} completed")
         return output
